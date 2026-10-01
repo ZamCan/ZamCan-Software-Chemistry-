@@ -2,7 +2,7 @@ name: Scientific validation
 
 on:
   push:
-    branches: ["main", "engineering/**"]
+    branches: ["main", "engineering/**", "scm/**", "lcm/**", "zcm/**"]
   pull_request:
     branches: ["main"]
 
