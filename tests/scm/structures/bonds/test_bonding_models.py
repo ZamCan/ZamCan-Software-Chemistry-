@@ -122,3 +122,49 @@ def test_vsepr_maps_common_domain_patterns():
     assert analyze_vsepr(4, 0).molecular_geometry == "tetrahedral"
     assert analyze_vsepr(4, 1).molecular_geometry == "trigonal_pyramidal"
     assert analyze_vsepr(4, 2).molecular_geometry == "bent"
+
+
+def test_resonance_set_preserves_composition_and_averages_orders():
+    from scm.structures.bonds import ResonanceSet, ResonanceStructure
+
+    n = Atom.create(7)
+    o1 = Atom.create(8)
+    o2 = Atom.create(8)
+    molecule = Molecule(
+        species=(n, o1, o2),
+        connectivity=Connectivity(
+            nodes=(n, o1, o2),
+            bonds=(Bond(n, o1), Bond(n, o2)),
+        ),
+        charge=-1,
+    )
+    first = ResonanceStructure(molecule, (BondOrder.DOUBLE, BondOrder.SINGLE))
+    second = ResonanceStructure(molecule, (BondOrder.SINGLE, BondOrder.DOUBLE))
+    resonance = ResonanceSet((first, second))
+
+    assert resonance.count == 2
+    assert resonance.average_bond_order(0) == 1.5
+    assert resonance.average_bond_order(1) == 1.5
+
+
+def test_bond_network_summary_separates_primary_and_secondary_interactions():
+    from scm.structures.bonds import BondNetworkSummary, summarize_bond_network
+
+    o = Atom.create(8)
+    h = Atom.create(1)
+    c = Atom.create(6)
+    graph = Connectivity(
+        nodes=(o, h, c),
+        bonds=(
+            Bond(o, h, bond_type=BondType.COVALENT),
+            Bond(o, c, bond_type=BondType.HYDROGEN),
+        ),
+    )
+    molecule = Molecule(species=(o, h, c), connectivity=graph)
+
+    result = summarize_bond_network(molecule)
+
+    assert isinstance(result, BondNetworkSummary)
+    assert result.primary_bonds == 1
+    assert result.secondary_interactions == 1
+    assert result.total_bonds == 2
