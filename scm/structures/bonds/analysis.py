@@ -14,7 +14,6 @@ class BondFeasibility(str, Enum):
 
 
 @dataclass(frozen=True)
-@dataclass(frozen=True)
 class BondPhysics:
     """Compact mathematical model inventory for bonding analysis."""
     coulomb_energy: str
