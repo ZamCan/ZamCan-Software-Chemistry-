@@ -1,4 +1,6 @@
 from scm.matter.atoms import neutral_atom
+from scm.matter.composition import Composition
+from scm.matter.species import ChemicalSpecies
 from scm.matter.ions import Ion
 
 
