@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from scm.core.enums import ScientificStatus
+from scm.core.evidence import Evidence, normalize_evidence
+
 
 class NameType(str, Enum):
     SYSTEMATIC = "systematic"
@@ -22,6 +25,8 @@ class ChemicalName:
     language: str = "en"
     preferred: bool = False
     source: str | None = None
+    status: ScientificStatus = ScientificStatus.KNOWN
+    evidence: tuple[Evidence, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.name, str) or not self.name.strip():
@@ -32,6 +37,12 @@ class ChemicalName:
 
         if not isinstance(self.language, str) or not self.language.strip():
             raise ValueError("language must not be empty")
+
+        if not isinstance(self.status, ScientificStatus):
+            raise TypeError("status must be a ScientificStatus")
+
+        normalized = normalize_evidence(self.evidence)
+        object.__setattr__(self, "evidence", normalized)
 
 
 @dataclass(frozen=True)
