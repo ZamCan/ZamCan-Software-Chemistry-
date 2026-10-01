@@ -15,3 +15,6 @@ include = ["scm*", "lcm*", "zcm*", "knowledge*"]
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
+
+[project.scripts]
+zcm = "zcm.cli:main"
