@@ -1,7 +1,7 @@
 import pytest
 
 from scm.matter.atoms import Atom
-from scm.structures.bonds import Bond, BondOrder
+from scm.structures.bonds import Bond, BondComponent, BondOrder
 from scm.structures.connectivity import Connectivity
 
 
@@ -153,3 +153,26 @@ def test_bond_count():
     )
 
     assert len(graph.bonds) == 2
+
+
+def test_bond_tracks_sigma_and_pi_components():
+    c1 = Atom.create(6)
+    c2 = Atom.create(6)
+
+    single = Bond(c1, c2, BondOrder.SINGLE, components=(BondComponent.SIGMA,))
+    double = Bond(c1, c2, BondOrder.DOUBLE, components=(BondComponent.SIGMA, BondComponent.PI))
+
+    assert single.sigma_count == 1
+    assert single.pi_count == 0
+    assert double.sigma_count == 1
+    assert double.pi_count == 1
+
+
+def test_bond_component_string_values_are_normalized():
+    c1 = Atom.create(6)
+    c2 = Atom.create(6)
+
+    bond = Bond(c1, c2, components=("sigma", "pi"))
+
+    assert bond.components == (BondComponent.SIGMA, BondComponent.PI)
+    assert bond.component_count == 2
