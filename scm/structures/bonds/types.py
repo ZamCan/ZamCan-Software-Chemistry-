@@ -41,6 +41,7 @@ class BondComponent(str, Enum):
 
     SIGMA = "sigma"
     PI = "pi"
+    DELOCALIZED_PI = "delocalized_pi"
     DELocalized_PI = "delocalized_pi"
     THREE_CENTER = "three_center"
     FOUR_ELECTRON = "four_electron"
