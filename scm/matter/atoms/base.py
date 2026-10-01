@@ -8,6 +8,8 @@ from scm.matter.electrons import (
     ground_state_configuration,
 )
 from scm.matter.species import ChemicalSpecies
+from scm.matter.nuclei import Nucleus
+from scm.matter.isotopes import Isotope
 
 
 @dataclass(frozen=True)
@@ -25,8 +27,15 @@ class Atom(ChemicalSpecies):
     atomic_number: int = 1
     electron_count: int | None = None
     symbol: str | None = None
+    mass_number: int | None = None
 
     def __post_init__(self) -> None:
+        if self.mass_number is not None:
+            if isinstance(self.mass_number, bool) or not isinstance(self.mass_number, int):
+                raise TypeError("mass_number must be an integer")
+            if self.mass_number < self.atomic_number:
+                raise ValueError("mass_number cannot be less than atomic_number")
+
         if not isinstance(self.atomic_number, int):
             raise TypeError("atomic_number must be an integer")
 
@@ -81,6 +90,7 @@ class Atom(ChemicalSpecies):
         *,
         electron_count: int | None = None,
         symbol: str | None = None,
+        mass_number: int | None = None,
     ) -> "Atom":
         """
         Construct an atom from atomic identity.
@@ -143,7 +153,45 @@ class Atom(ChemicalSpecies):
             atomic_number=atomic_number,
             electron_count=electron_count,
             symbol=canonical_symbol,
+            mass_number=mass_number,
         )
+
+    @classmethod
+    def from_isotope(
+        cls,
+        isotope: Isotope,
+        *,
+        electron_count: int | None = None,
+    ) -> "Atom":
+        """Construct an atomic electronic state from a nuclear isotope identity."""
+        if not isinstance(isotope, Isotope):
+            raise TypeError("isotope must be an Isotope")
+        return cls.create(
+            isotope.atomic_number,
+            electron_count=electron_count,
+            mass_number=isotope.mass_number,
+        )
+
+    @property
+    def nucleus(self) -> Nucleus:
+        """Return the nuclear identity represented by this atom."""
+        if self.mass_number is None:
+            raise ValueError("nucleus is unavailable for an atom without isotope identity")
+        return Nucleus.from_mass_number(self.atomic_number, self.mass_number)
+
+    @property
+    def isotope(self) -> Isotope | None:
+        """Return isotope identity when mass number is explicitly modeled."""
+        if self.mass_number is None:
+            return None
+        return Isotope.from_za(self.atomic_number, self.mass_number)
+
+    @property
+    def neutron_count(self) -> int | None:
+        """Return neutron count when isotope identity is explicit."""
+        if self.mass_number is None:
+            return None
+        return self.mass_number - self.atomic_number
 
     @property
     def proton_count(self) -> int:
