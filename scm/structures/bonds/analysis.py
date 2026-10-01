@@ -44,6 +44,14 @@ class BondTheory:
 
 
 BOND_THEORIES: dict[str, BondTheory] = {
+    "polar_covalent": BondTheory(
+        type="polar_covalent",
+        order="Covalent bond order; polarity reflects unequal electron distribution rather than a separate bond-order system.",
+        electron_description="Shared electron density is shifted toward the more electronegative atom.",
+        mathematical_basis=("Dipole moment is represented by μ = q r for a simple charge-separation model.", "Ionic character varies continuously with electronegativity difference; no universal hard cutoff exists."),
+        physical_influences=("electronegativity difference", "bond length", "electronic structure", "environment"),
+        chemical_consequences=("bond polarity", "dipole moments", "reactivity", "spectroscopic behavior"),
+    ),
     "covalent": BondTheory(
         type="covalent",
         order="Bond order describes the effective number of bonding interactions; "
@@ -114,6 +122,22 @@ BOND_THEORIES: dict[str, BondTheory] = {
             "reflectivity",
             "alloy behavior",
         ),
+    ),
+    "multicenter": BondTheory(
+        type="multicenter",
+        order="Bonding distributed over more than two atoms.",
+        electron_description="Electron density can stabilize a group of nuclei through delocalized or three-center interactions.",
+        mathematical_basis=("Requires an electronic-structure description rather than pairwise Lewis bookkeeping alone.",),
+        physical_influences=("orbital symmetry", "electron count", "geometry", "charge"),
+        chemical_consequences=("unusual bonding", "electron-deficient structures", "cluster and hypervalent chemistry"),
+    ),
+    "halogen": BondTheory(
+        type="halogen",
+        order="Usually treated as a noncovalent interaction rather than a conventional primary bond.",
+        electron_description="An electrophilic region associated with a covalently bound halogen can interact with a donor.",
+        mathematical_basis=("Electrostatics, polarization, dispersion and charge-transfer contributions may all matter.",),
+        physical_influences=("halogen identity", "donor strength", "geometry", "environment"),
+        chemical_consequences=("molecular recognition", "crystal packing", "supramolecular assembly"),
     ),
     "coordinate": BondTheory(
         type="coordinate",
