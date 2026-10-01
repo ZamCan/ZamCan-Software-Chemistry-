@@ -45,9 +45,6 @@ class ChemicalIdentity:
         if not isinstance(self.formula, str) or not self.formula.strip():
             raise ValueError("formula must not be empty")
 
-        if self.identity_key is None:
-            raise ValueError("identity_key must be provided")
-        
         for name in self.names:
             if not isinstance(name, ChemicalName):
                 raise TypeError(
