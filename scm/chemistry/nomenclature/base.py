@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class NameType(str, Enum):
@@ -37,11 +38,16 @@ class ChemicalName:
 class ChemicalIdentity:
     formula: str
     names: tuple[ChemicalName, ...] = ()
+    identity_key: Any | None = None
+    source: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.formula, str) or not self.formula.strip():
             raise ValueError("formula must not be empty")
 
+        if self.identity_key is None:
+            raise ValueError("identity_key must be provided")
+        
         for name in self.names:
             if not isinstance(name, ChemicalName):
                 raise TypeError(
