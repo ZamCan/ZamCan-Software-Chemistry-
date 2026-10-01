@@ -34,14 +34,14 @@ class ResonanceSet:
         if not structures:
             raise ValueError("at least one resonance structure is required")
         reference = structures[0].molecule
-        reference_edges = _topology_edges(reference)
+        reference_signature = _topology_signature(reference)
         for item in structures:
             if item.molecule.net_charge != reference.net_charge:
                 raise ValueError("resonance structures must have the same net charge")
             if item.molecule.formula_counts != reference.formula_counts:
                 raise ValueError("resonance structures must have the same elemental composition")
-            if _topology_edges(item.molecule) != reference_edges:
-                raise ValueError("resonance structures must preserve connectivity")
+            if _topology_signature(item.molecule) != reference_signature:
+                raise ValueError("resonance structures must preserve atom ordering and connectivity")
         object.__setattr__(self, "structures", structures)
 
     @property
@@ -69,11 +69,12 @@ def _order_value(order: BondOrder) -> float:
     }.get(order, 0.0)
 
 
-def _topology_edges(molecule: Molecule) -> tuple[tuple[str, str], ...]:
-    labels = {id(item): item.identity_key for item in molecule.species}
+def _topology_signature(molecule: Molecule) -> tuple:
+    labels = tuple(item.identity_key for item in molecule.species)
+    index = {id(item): i for i, item in enumerate(molecule.species)}
     edges = []
     for bond in molecule.connectivity.bonds:
-        a = str(labels[id(bond.first)])
-        b = str(labels[id(bond.second)])
-        edges.append(tuple(sorted((a, b))))
-    return tuple(sorted(edges))
+        first = index[id(bond.first)]
+        second = index[id(bond.second)]
+        edges.append(tuple(sorted((first, second))))
+    return labels, tuple(sorted(edges))
