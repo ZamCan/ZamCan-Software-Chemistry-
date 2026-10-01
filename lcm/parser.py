@@ -24,6 +24,14 @@ _REACTION_RE = re.compile(
     re.IGNORECASE,
 )
 
+
+_ANALYSIS_PATTERNS = (
+    (re.compile(r"^(?:oxidation state|hali ya oksidishaji|حالة الأكسدة)\\s*[:\\-]?\\s*(.+)$", re.I), IntentKind.OXIDATION_STATE),
+    (re.compile(r"^(?:molar mass|uzito wa moli|الكتلة المولية)\\s*[:\\-]?\\s*(.+)$", re.I), IntentKind.MOLAR_MASS),
+    (re.compile(r"^(?:titration|titration ya|معايرة)\\s*[:\\-]?\\s*(.+)$", re.I), IntentKind.TITRATION),
+    (re.compile(r"^(?:equilibrium|usawaziko|اتزان)\\s*[:\\-]?\\s*(.+)$", re.I), IntentKind.EQUILIBRIUM),
+)
+
 _FORMULA_SPLIT_RE = re.compile(r"\s*(?:->|→|=>|=)\s*")
 
 
@@ -34,6 +42,11 @@ def parse(text: str) -> ChemicalIntent:
     raw = text.strip()
     if not raw:
         raise ValueError("text must not be empty")
+
+    for pattern, kind in _ANALYSIS_PATTERNS:
+        match = pattern.match(raw)
+        if match:
+            return ChemicalIntent(kind=kind, raw_text=raw, target=match.group(1).strip())
 
     match = _ELEMENT_RE.match(raw)
     if match:
