@@ -23,3 +23,22 @@ def test_balance_iron_oxide():
     result = balance_equation(equation)
 
     assert result.formatted() == "4Fe + 3O2 → 2Fe2O3"
+
+
+def test_balances_explicit_ionic_charge():
+    from scm.chemistry.reactions.equation import ChemicalEquation, ReactionSide, Species
+    from scm.chemistry.reactions.balancer import balance_equation
+
+    equation = ChemicalEquation(
+        reactants=ReactionSide((
+            Species("Fe", charge_number=2),
+            Species("Ce", charge_number=4),
+        )),
+        products=ReactionSide((
+            Species("Fe", charge_number=3),
+            Species("Ce", charge_number=3),
+        )),
+    )
+    result = balance_equation(equation)
+
+    assert result.balanced
