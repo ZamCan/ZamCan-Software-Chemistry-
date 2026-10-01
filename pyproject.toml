@@ -11,3 +11,7 @@ requires-python = ">=3.11"
 
 [tool.setuptools.packages.find]
 include = ["scm*", "lcm*", "zcm*", "knowledge*"]
+
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib"
