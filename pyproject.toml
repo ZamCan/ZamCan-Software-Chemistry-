@@ -14,4 +14,4 @@ include = ["scm*", "lcm*", "zcm*", "knowledge*"]
 
 
 [tool.pytest.ini_options]
-import_mode = "importlib"
+addopts = "--import-mode=importlib"
