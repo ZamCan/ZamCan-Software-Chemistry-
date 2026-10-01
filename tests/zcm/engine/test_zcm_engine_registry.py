@@ -11,6 +11,7 @@ def test_zcm_registry_contains_common_modules():
         "elements",
         "calculator",
         "reactions",
+        "molar_mass",
     }
 
 
