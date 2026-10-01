@@ -139,3 +139,87 @@ Bonding information feeds directly into:
 - **Laboratory science:** qualitative identification, spectroscopy, precipitation, titration and sample interpretation.
 
 The computational rule remains: **bonding knowledge supplies constraints and explanations; electronic/energetic calculations and evidence establish the actual result.**
+
+
+## 9. Lewis electron bookkeeping
+
+SCM treats a Lewis structure as an auditable electron-accounting model, not as the complete quantum description.
+
+For a species with explicit atomic connectivity:
+
+**total valence electrons = sum(atomic valence electrons) − net charge**
+
+For each atom, formal charge is calculated as:
+
+**formal charge = valence electrons − nonbonding electrons − assigned bonding order**
+
+A multiple bond contributes its bond order to the assigned bonding-order sum and contributes two electrons per bond order to the shared-electron pool.
+
+The engine therefore requires explicit lone-pair assignments rather than silently inventing them. It can then report:
+
+- total available valence electrons
+- electrons assigned to bonds
+- electrons assigned to lone pairs
+- unassigned electrons
+- formal charge of every atom
+- duet/octet deficiency
+- expanded electron counts
+- odd-electron states.
+
+This is intentionally an audit layer. A Lewis structure that satisfies an octet is not automatically the experimentally correct electronic structure.
+
+## 10. VSEPR geometry
+
+VSEPR is implemented as a geometry model built from electron domains:
+
+- 2 domains → linear
+- 3 → trigonal planar
+- 4 → tetrahedral
+- 5 → trigonal bipyramidal
+- 6 → octahedral.
+
+Lone pairs alter the observed molecular geometry because they occupy electron-density domains but are not counted as bonded atoms in the molecular shape.
+
+Examples represented by the model include:
+
+- AX2 → linear
+- AX3 → trigonal planar
+- AX2E → bent
+- AX4 → tetrahedral
+- AX3E → trigonal pyramidal
+- AX2E2 → bent
+- AX5 → trigonal bipyramidal
+- AX4E → seesaw
+- AX3E2 → T-shaped
+- AX2E3 → linear
+- AX6 → octahedral
+- AX5E → square pyramidal
+- AX4E2 → square planar.
+
+VSEPR is a useful qualitative geometry model. It does not replace molecular-orbital calculations, electron-density analysis or measured geometry.
+
+## 11. Resonance and delocalization
+
+SCM represents resonance as a set of alternative Lewis bond-order assignments that preserve:
+
+- elemental composition
+- net charge
+- atom connectivity.
+
+The engine can calculate an average/effective bond order across the supplied resonance representations. This is a representation-level quantity; it does not claim that the molecule physically oscillates between drawings.
+
+This distinction is important for aromatic and delocalized systems, where localized integer bond drawings are models of a delocalized electronic state.
+
+## 12. Bond-network analysis
+
+A molecule or material can contain multiple interaction regimes simultaneously. SCM therefore records bond-type counts and separates primary structural bonds from secondary/noncovalent interactions.
+
+This enables later property engines to ask structurally meaningful questions such as:
+
+- how many covalent connections exist?
+- are coordinate interactions present?
+- are hydrogen-bond contacts represented?
+- is the structure dominated by ionic, metallic or covalent connectivity?
+- what total formal/effective bond-order content is represented?
+
+No single count is interpreted as a universal measure of stability.
