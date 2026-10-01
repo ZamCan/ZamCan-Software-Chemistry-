@@ -121,6 +121,22 @@ class Molecule:
     def net_charge(self) -> int:
         return self.charge
 
+    def lewis_bookkeeping(self, lone_pairs: tuple[int, ...]):
+        """Audit an explicit atom-level Lewis electron assignment."""
+        from scm.structures.bonds.lewis import build_lewis_bookkeeping
+        return build_lewis_bookkeeping(self, lone_pairs)
+
+    def bond_network_summary(self):
+        """Summarize primary and secondary bonding represented by this molecule."""
+        from scm.structures.bonds.network import summarize_bond_network
+        return summarize_bond_network(self)
+
+    def vsepr_for(self, species: ChemicalSpecies, lone_pair_domains: int = 0):
+        """Apply the qualitative VSEPR model to one central atom/species."""
+        from scm.structures.bonds.vsepr import analyze_vsepr
+        bonding_domains = self.connectivity.degree(species)
+        return analyze_vsepr(bonding_domains, lone_pair_domains)
+
     @property
     def topology_signature(self) -> tuple:
         """Deterministic topology fingerprint for indexing and comparison.
