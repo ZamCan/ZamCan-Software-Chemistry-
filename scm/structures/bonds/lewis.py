@@ -5,7 +5,10 @@ from enum import Enum
 
 from scm.matter.atoms import Atom
 from scm.structures.bonds import Bond, BondOrder, BondType
-from scm.structures.molecules import Molecule
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from scm.structures.molecules import Molecule
 
 
 class OctetStatus(str, Enum):
