@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from .base import ChemicalIdentity, ChemicalName, NameType
+from scm.chemistry.formulas import parse_formula
+from scm.chemistry.identity_key import identity_key
+from scm.matter.composition import Composition
+from scm.matter.species import ChemicalSpecies
 
 
 class NomenclatureEngine:
@@ -11,9 +15,18 @@ class NomenclatureEngine:
         formula: str,
         names: tuple[ChemicalName, ...] = (),
     ) -> ChemicalIdentity:
+        parsed = parse_formula(formula)
+        composition = Composition.from_mapping(
+            {
+                component.element: component.count
+                for component in parsed.components
+            }
+        )
+        species = ChemicalSpecies(composition=composition)
         return ChemicalIdentity(
-            formula=formula,
+            formula=str(composition),
             names=names,
+            identity_key=identity_key(species),
         )
 
     def names(
