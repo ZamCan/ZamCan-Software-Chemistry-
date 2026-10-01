@@ -42,3 +42,10 @@ def test_balances_explicit_ionic_charge():
     result = balance_equation(equation)
 
     assert result.balanced
+
+
+def test_grouped_formula_parser_counts_nested_groups():
+    from scm.chemistry.formulas import parse_grouped_formula
+
+    parsed = parse_grouped_formula("Al2(SO4)3")
+    assert parsed.element_counts == {"Al": 2, "S": 3, "O": 12}
