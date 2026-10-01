@@ -45,7 +45,7 @@ def parse(text: str) -> ChemicalIntent:
 
     match = _BALANCE_RE.match(raw)
     if match:
-        equation = match.group(3).strip()
+        equation = match.group(2).strip()
         reactants, products = _parse_equation(equation)
         return ChemicalIntent(
             kind=IntentKind.BALANCE_EQUATION,
