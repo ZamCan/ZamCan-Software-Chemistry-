@@ -38,3 +38,24 @@ def test_bond_screening_reports_missing_deep_evidence():
 def test_electronegativity_difference_changes_polarity_description():
     assert classify_covalent_character(0.0) == "nonpolar_covalent"
     assert classify_covalent_character(1.0) == "polar_covalent"
+
+
+def test_energy_curve_analysis_finds_supplied_equilibrium_minimum():
+    from scm.structures.bonds import BondEnergyPoint, assess_energy_curve
+
+    result = assess_energy_curve((
+        BondEnergyPoint(0.8, 2.0),
+        BondEnergyPoint(1.0, -1.0),
+        BondEnergyPoint(1.2, 1.0),
+    ))
+
+    assert result.stable_minimum
+    assert result.equilibrium_distance == 1.0
+    assert result.minimum_energy == -1.0
+
+
+def test_coulomb_energy_has_expected_sign():
+    from scm.structures.bonds import coulomb_energy
+
+    assert coulomb_energy(1.0, -1.0, 2.0, 1.0) < 0
+    assert coulomb_energy(1.0, 1.0, 2.0, 1.0) > 0
