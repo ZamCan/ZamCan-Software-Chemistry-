@@ -14,6 +14,17 @@ class BondFeasibility(str, Enum):
 
 
 @dataclass(frozen=True)
+@dataclass(frozen=True)
+class BondPhysics:
+    """Compact mathematical model inventory for bonding analysis."""
+    coulomb_energy: str
+    quantum_basis: str
+    electrostatic_force: str
+    bond_order_model: str
+    caveat: str
+
+
+@dataclass(frozen=True)
 class BondTheory:
     """Scientific explanation attached to a bond classification.
 
@@ -180,3 +191,34 @@ def get_bond_theory(bond_type: str) -> BondTheory:
         return BOND_THEORIES[key]
     except KeyError as exc:
         raise ValueError(f"unknown bond type: {bond_type!r}") from exc
+
+
+BOND_PHYSICS = BondPhysics(
+    coulomb_energy="U(r) = k_e q1 q2 / r for point-charge electrostatics.",
+    quantum_basis="Electronic states follow the quantum Hamiltonian; bonding is associated with a lower-energy electronic state than separated constituents when a stable minimum exists.",
+    electrostatic_force="F(r) = k_e q1 q2 / r^2 for the point-charge component.",
+    bond_order_model="MO bond order = (N_bonding - N_antibonding) / 2; localized Lewis bond order counts shared electron pairs.",
+    caveat="These are models, not a universal single equation for every bond. Real systems require geometry, electron density, quantum state, environment and, where needed, experimental evidence.",
+)
+
+
+def classify_covalent_character(electronegativity_difference: float) -> str:
+    """Describe polarity without pretending a hard ionic/covalent boundary exists."""
+    if electronegativity_difference < 0:
+        raise ValueError("electronegativity difference must be nonnegative")
+    if electronegativity_difference == 0:
+        return "nonpolar_covalent"
+    return "polar_covalent"
+
+
+def bond_order_consequence(order: BondOrder) -> tuple[str, ...]:
+    """Return qualitative consequences, not fabricated numerical properties."""
+    return {
+        BondOrder.SINGLE: ("one formal bonding pair", "often longer/weaker than higher-order bonds of the same atom pair"),
+        BondOrder.DOUBLE: ("two formal bonding pairs", "often shorter/stronger than the corresponding single bond"),
+        BondOrder.TRIPLE: ("three formal bonding pairs", "often shorter/stronger than the corresponding double bond"),
+        BondOrder.QUADRUPLE: ("four formal bonding interactions in systems where supported", "requires appropriate electronic structure"),
+        BondOrder.AROMATIC: ("delocalized bonding representation", "individual bonds need not have integer localized order"),
+        BondOrder.PARTIAL: ("fractional/effective bonding character", "common in delocalized or averaged descriptions"),
+        BondOrder.UNKNOWN: ("bond order not established",),
+    }[order]
