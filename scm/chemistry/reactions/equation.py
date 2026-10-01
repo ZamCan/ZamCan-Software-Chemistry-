@@ -7,10 +7,13 @@ from typing import Mapping
 @dataclass(frozen=True)
 class Species:
     formula: str
+    charge_number: int = 0
 
     def __post_init__(self) -> None:
         if not isinstance(self.formula, str) or not self.formula.strip():
             raise ValueError("species formula must not be empty")
+        if not isinstance(self.charge_number, int) or isinstance(self.charge_number, bool):
+            raise TypeError("charge_number must be an integer")
 
 
 @dataclass(frozen=True)
