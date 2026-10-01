@@ -2,11 +2,10 @@ from enum import Enum
 
 
 class BondOrder(str, Enum):
-    """Formal bond order representation.
+    """Formal/effective bond-order descriptors.
 
-    Bond order is a structural/electronic descriptor, not a universal measure
-    of bond strength. Delocalized systems may require fractional/effective
-    orders, and some interactions have no meaningful integer bond order.
+    Bond order is not universally identical to bond strength. In delocalized
+    or multicentre systems an effective/fractional value may be appropriate.
     """
 
     SINGLE = "single"
@@ -19,18 +18,30 @@ class BondOrder(str, Enum):
 
 
 class BondType(str, Enum):
-    """Chemical interaction/bonding regime.
+    """Primary interaction classification.
 
-    These categories are intentionally not mutually exclusive in real
-    chemistry. For example, a polar covalent bond has covalent character with
-    charge separation, while coordinate bonding is a mode of electron-pair
-    donation within covalent/coordination chemistry.
+    Real bonds form a continuum of ionic/covalent character. These labels
+    describe dominant bonding regimes or chemically useful interaction modes.
     """
 
     COVALENT = "covalent"
+    POLAR_COVALENT = "polar_covalent"
     IONIC = "ionic"
     METALLIC = "metallic"
     COORDINATE = "coordinate"
+    MULTICENTER = "multicenter"
     HYDROGEN = "hydrogen"
+    HALOGEN = "halogen"
     VAN_DER_WAALS = "van_der_waals"
+    UNKNOWN = "unknown"
+
+
+class BondComponent(str, Enum):
+    """Directional components used to describe covalent bonding."""
+
+    SIGMA = "sigma"
+    PI = "pi"
+    DELocalized_PI = "delocalized_pi"
+    THREE_CENTER = "three_center"
+    FOUR_ELECTRON = "four_electron"
     UNKNOWN = "unknown"
