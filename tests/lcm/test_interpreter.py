@@ -11,4 +11,4 @@ def test_interprets_element_lookup_through_zcm_catalog():
 def test_interprets_equation_balance_through_scm():
     result = interpret(parse("balance H2 + O2 -> H2O"))
     assert result.successful
-    assert result.result.is_balanced
+    assert result.result.balanced
