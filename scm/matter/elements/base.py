@@ -36,6 +36,23 @@ class Element:
         """
         return self.atomic_number
 
+    @property
+    def neutral_atom(self):
+        """Return the neutral atomic species represented by this element."""
+        from scm.matter.atoms import Atom
+
+        return Atom.create(self.atomic_number)
+
+    @property
+    def electron_configuration(self):
+        """Return the modeled ground-state configuration of the neutral atom."""
+        return self.neutral_atom.configuration
+
+    @property
+    def valence_electron_count(self) -> int:
+        """Return the neutral atom's modeled valence-electron count."""
+        return self.neutral_atom.valence_electron_count
+
     def contains_isotope(self, isotope: Isotope) -> bool:
         """
         Return True when the isotope belongs to this element.
