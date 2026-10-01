@@ -40,3 +40,27 @@ def test_chloride_is_chemical_species():
     assert ion.charge_number == -1
     assert ion.electron_count == 18
     assert ion.is_anion
+
+
+
+def test_species_identity_key_is_deterministic():
+    from scm.chemistry.identity_key import ChemicalIdentityKey
+
+    first = ChemicalSpecies(
+        Composition.from_mapping({"H": 2, "O": 1})
+    )
+    second = ChemicalSpecies(
+        Composition.from_mapping({"O": 1, "H": 2})
+    )
+
+    assert first.identity_key == second.identity_key
+    assert isinstance(first.identity_key, ChemicalIdentityKey)
+
+
+def test_species_identity_key_includes_charge_and_radical():
+    neutral = ChemicalSpecies(Composition.from_mapping({"O": 1}))
+    ion = ChemicalSpecies(Composition.from_mapping({"O": 1}), charge_number=-1)
+    radical = ChemicalSpecies(Composition.from_mapping({"O": 1}), radical=True)
+
+    assert neutral.identity_key != ion.identity_key
+    assert neutral.identity_key != radical.identity_key
