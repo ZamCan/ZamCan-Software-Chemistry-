@@ -38,6 +38,14 @@ class LewisBookkeeping:
     atoms: tuple[LewisAtomBookkeeping, ...]
 
     @property
+    def remaining_unassigned_electrons(self) -> float:
+        return self.total_valence_electrons - self.assigned_bonding_electrons - self.assigned_nonbonding_electrons
+
+    @property
+    def electron_accounting_balanced(self) -> bool:
+        return self.remaining_unassigned_electrons == 0
+
+    @property
     def formal_charge_sum(self) -> float:
         return sum(item.formal_charge for item in self.atoms)
 
@@ -88,7 +96,7 @@ def build_lewis_bookkeeping(
     """
     if len(lone_pairs) != len(molecule.species):
         raise ValueError("lone_pairs must contain one entry per molecule species")
-    if any(isinstance(value, bool) or value < 0 for value in lone_pairs):
+    if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in lone_pairs):
         raise ValueError("lone-pair counts must be nonnegative integers")
 
     atoms = tuple(molecule.species)
