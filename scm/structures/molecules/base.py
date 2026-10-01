@@ -120,3 +120,28 @@ class Molecule:
     @property
     def net_charge(self) -> int:
         return self.charge
+
+    @property
+    def topology_signature(self) -> tuple:
+        """Deterministic topology fingerprint for indexing and comparison.
+
+        This is intentionally not presented as a complete graph-isomorphism
+        proof. Exact structural identity will be provided by the future
+        canonical graph engine.
+        """
+        labels = tuple(
+            (
+                item.identity_key,
+                item.charge_number,
+                item.radical,
+            )
+            for item in self.species
+        )
+        index = {id(node): i for i, node in enumerate(self.species)}
+        edges = []
+        for bond in self.connectivity.bonds:
+            first = index[id(bond.first)]
+            second = index[id(bond.second)]
+            a, b = sorted((first, second))
+            edges.append((a, b, bond.bond_type.value, bond.order.value))
+        return (labels, tuple(sorted(edges)))
