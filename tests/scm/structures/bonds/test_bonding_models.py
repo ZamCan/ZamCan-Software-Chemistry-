@@ -7,6 +7,10 @@ from scm.structures.bonds import (
     valence_electron_count,
 )
 from scm.structures.bonds.analysis import BOND_PHYSICS, classify_covalent_character
+from scm.structures.connectivity import Connectivity
+from scm.structures.molecules import Molecule
+from scm.matter.atoms import Atom
+
 
 
 def test_bond_taxonomy_contains_real_chemical_regimes():
@@ -59,3 +63,62 @@ def test_coulomb_energy_has_expected_sign():
 
     assert coulomb_energy(1.0, -1.0, 2.0, 1.0) < 0
     assert coulomb_energy(1.0, 1.0, 2.0, 1.0) > 0
+
+
+def test_water_lewis_bookkeeping_conserves_electrons_and_formal_charge():
+    from scm.structures.bonds import build_lewis_bookkeeping
+
+    o = Atom.create(8)
+    h1 = Atom.create(1)
+    h2 = Atom.create(1)
+    molecule = Molecule(
+        species=(o, h1, h2),
+        connectivity=Connectivity(
+            nodes=(o, h1, h2),
+            bonds=(Bond(o, h1), Bond(o, h2)),
+        ),
+        charge=0,
+    )
+
+    result = build_lewis_bookkeeping(molecule, (2, 0, 0))
+
+    assert result.total_valence_electrons == 8
+    assert result.electron_accounted_for == 8.0
+    assert result.formal_charge_sum == 0
+    assert result.atoms[0].status.value == "octet"
+    assert all(item.formal_charge == 0 for item in result.atoms)
+
+
+def test_carbon_dioxide_double_bonds_have_sixteen_accounted_electrons():
+    from scm.structures.bonds import build_lewis_bookkeeping
+
+    c = Atom.create(6)
+    o1 = Atom.create(8)
+    o2 = Atom.create(8)
+    molecule = Molecule(
+        species=(c, o1, o2),
+        connectivity=Connectivity(
+            nodes=(c, o1, o2),
+            bonds=(
+                Bond(c, o1, BondOrder.DOUBLE),
+                Bond(c, o2, BondOrder.DOUBLE),
+            ),
+        ),
+        charge=0,
+    )
+
+    result = build_lewis_bookkeeping(molecule, (0, 2, 2))
+
+    assert result.total_valence_electrons == 16
+    assert result.electron_accounted_for == 16.0
+    assert all(item.formal_charge == 0 for item in result.atoms)
+
+
+def test_vsepr_maps_common_domain_patterns():
+    from scm.structures.bonds import analyze_vsepr
+
+    assert analyze_vsepr(2, 0).molecular_geometry == "linear"
+    assert analyze_vsepr(3, 0).molecular_geometry == "trigonal_planar"
+    assert analyze_vsepr(4, 0).molecular_geometry == "tetrahedral"
+    assert analyze_vsepr(4, 1).molecular_geometry == "trigonal_pyramidal"
+    assert analyze_vsepr(4, 2).molecular_geometry == "bent"
