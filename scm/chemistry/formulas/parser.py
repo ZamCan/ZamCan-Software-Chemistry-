@@ -6,6 +6,7 @@ from .model import ChemicalFormula, FormulaComponent
 
 
 _ELEMENT = re.compile(r"([A-Z][a-z]?)(\d*)")
+_GROUP = re.compile(r"[()]")
 
 
 def parse_formula(formula: str) -> ChemicalFormula:
@@ -20,6 +21,12 @@ def parse_formula(formula: str) -> ChemicalFormula:
     components: list[FormulaComponent] = []
     position = 0
 
+    # Preserve the established simple parser contract here; grouped formulas
+    # are validated explicitly by the higher formula engine until grouped
+    # composition support is promoted into the canonical parser.
+    if _GROUP.search(formula):
+        raise ValueError("grouped formula syntax is not yet supported")
+    
     for match in _ELEMENT.finditer(formula):
         if match.start() != position:
             raise ValueError(
