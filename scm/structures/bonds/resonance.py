@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .types import BondOrder
-from scm.structures.molecules import Molecule
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from scm.structures.molecules import Molecule
 
 
 @dataclass(frozen=True)
