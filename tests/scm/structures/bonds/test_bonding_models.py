@@ -168,3 +168,24 @@ def test_bond_network_summary_separates_primary_and_secondary_interactions():
     assert result.primary_bonds == 1
     assert result.secondary_interactions == 1
     assert result.total_bonds == 2
+
+
+def test_molecule_integrates_lewis_network_and_vsepr_models():
+    o = Atom.create(8)
+    h1 = Atom.create(1)
+    h2 = Atom.create(1)
+    molecule = Molecule(
+        species=(o, h1, h2),
+        connectivity=Connectivity(
+            nodes=(o, h1, h2),
+            bonds=(Bond(o, h1), Bond(o, h2)),
+        ),
+    )
+
+    lewis = molecule.lewis_bookkeeping((2, 0, 0))
+    network = molecule.bond_network_summary()
+    vsepr = molecule.vsepr_for(o, lone_pair_domains=2)
+
+    assert lewis.electron_accounting_balanced
+    assert network.primary_bonds == 2
+    assert vsepr.molecular_geometry == "bent"
