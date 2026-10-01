@@ -67,6 +67,27 @@ class Bond:
         return self.order is BondOrder.AROMATIC
 
     @property
+    def is_intramolecular(self) -> bool:
+        """Whether this is represented as a primary chemical bond.
+
+        Hydrogen bonding and van der Waals attraction are modeled as
+        intermolecular/secondary interactions by default.
+        """
+        return self.bond_type not in {
+            BondType.HYDROGEN,
+            BondType.VAN_DER_WAALS,
+        }
+
+    @property
+    def is_primary_bond(self) -> bool:
+        return self.bond_type in {
+            BondType.COVALENT,
+            BondType.IONIC,
+            BondType.METALLIC,
+            BondType.COORDINATE,
+        }
+
+    @property
     def order_value(self) -> float | None:
         values = {
             BondOrder.SINGLE: 1.0,
@@ -74,6 +95,7 @@ class Bond:
             BondOrder.TRIPLE: 3.0,
             BondOrder.QUADRUPLE: 4.0,
             BondOrder.AROMATIC: 1.5,
+            BondOrder.PARTIAL: 0.5,
         }
         return values.get(self.order)
 
