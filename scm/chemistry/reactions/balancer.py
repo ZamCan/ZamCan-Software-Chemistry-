@@ -44,12 +44,23 @@ def balance_equation(equation: ChemicalEquation) -> BalancedEquation:
         for element in parse_formula(species_item.formula)
     })
 
+    # Ionic equations must conserve net charge as well as atoms.
+    include_charge = any(
+        species_item.charge_number != 0
+        for species_item in species
+    )
+    if include_charge:
+        atoms.append("__charge__")
+
     matrix: list[list[Fraction]] = []
 
     for element in atoms:
         row = []
         for index, species_item in enumerate(species):
-            count = parse_formula(species_item.formula).get(element, 0)
+            if element == "__charge__":
+                count = species_item.charge_number
+            else:
+                count = parse_formula(species_item.formula).get(element, 0)
             sign = 1 if index < len(equation.reactants.species) else -1
             row.append(Fraction(sign * count))
         matrix.append(row)
