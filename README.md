@@ -359,3 +359,27 @@ Initial development sequence:
 20. Production applications
 
 This project is experimental scientific software and research. Model predictions must not be treated as experimentally validated facts without appropriate evidence.
+
+## Current Kernel Expansion
+
+The repository now contains executable foundations beyond the original project scaffold, including:
+
+- conservative oxidation-state assignment with explicit ambiguity
+- stoichiometric limiting-reagent calculations
+- Gibbs free-energy and thermodynamic bookkeeping
+- Arrhenius/rate-law kinetics calculations
+- reaction-quotient/equilibrium calculation primitives
+- analytical titration calculations
+- explicit reaction-mechanism bond/electron-pair edit records
+- coordination-chemistry ligand/coordination-number records
+- canonical chemical identity keys
+- atom/ion electron-state consistency validation
+- multilingual English/Swahili/Arabic chemistry vocabulary
+- research experiments and dataset provenance records
+- structured Nano/Molecular/Laboratory/Process/Sensor visualization scenes
+- laboratory apparatus/measurement records
+- ZCM chemistry service facade, Python SDK and CLI entry point
+- shared education, laboratory, research and industrial workspace surfaces
+- formulation and process-engineering data models
+
+These are computational foundations, not claims that every scientific domain is already experimentally validated. Missing scientific data remains explicit rather than fabricated.
