@@ -136,7 +136,7 @@ def test_resonance_set_preserves_composition_and_averages_orders():
             nodes=(n, o1, o2),
             bonds=(Bond(n, o1), Bond(n, o2)),
         ),
-        charge=-1,
+        charge=0,
     )
     first = ResonanceStructure(molecule, (BondOrder.DOUBLE, BondOrder.SINGLE))
     second = ResonanceStructure(molecule, (BondOrder.SINGLE, BondOrder.DOUBLE))
