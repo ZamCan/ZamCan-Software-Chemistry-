@@ -8,6 +8,10 @@ class IntentKind(str, Enum):
     ELEMENT_LOOKUP = "element_lookup"
     BALANCE_EQUATION = "balance_equation"
     REACTION_ASSESSMENT = "reaction_assessment"
+    OXIDATION_STATE = "oxidation_state"
+    MOLAR_MASS = "molar_mass"
+    TITRATION = "titration"
+    EQUILIBRIUM = "equilibrium"
     UNKNOWN = "unknown"
 
 
