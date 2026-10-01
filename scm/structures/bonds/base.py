@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from scm.matter.species import ChemicalSpecies
 
-from .types import BondOrder, BondType
+from .types import BondComponent, BondOrder, BondType
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class Bond:
     second: ChemicalSpecies
     order: BondOrder = BondOrder.SINGLE
     bond_type: BondType = BondType.COVALENT
+    components: tuple[BondComponent, ...] = ()
 
     def __post_init__(self) -> None:
         if not isinstance(self.first, ChemicalSpecies):
@@ -38,6 +39,16 @@ class Bond:
             except ValueError as exc:
                 raise ValueError(f"invalid bond order: {self.order!r}") from exc
 
+        if not isinstance(self.components, tuple):
+            object.__setattr__(self, "components", tuple(self.components))
+        normalized_components: list[BondComponent] = []
+        for component in self.components:
+            if not isinstance(component, BondComponent):
+                component = BondComponent(component)
+            if component not in normalized_components:
+                normalized_components.append(component)
+        object.__setattr__(self, "components", tuple(normalized_components))
+
         if not isinstance(self.bond_type, BondType):
             try:
                 object.__setattr__(self, "bond_type", BondType(self.bond_type))
@@ -45,6 +56,18 @@ class Bond:
                 raise ValueError(
                     f"invalid bond type: {self.bond_type!r}"
                 ) from exc
+
+    @property
+    def component_count(self) -> int:
+        return len(self.components)
+
+    @property
+    def sigma_count(self) -> int:
+        return int(BondComponent.SIGMA in self.components)
+
+    @property
+    def pi_count(self) -> int:
+        return int(BondComponent.PI in self.components) + int(BondComponent.DELOCALIZED_PI in self.components)
 
     @property
     def endpoints(self) -> tuple[ChemicalSpecies, ChemicalSpecies]:
@@ -115,4 +138,5 @@ class Bond:
             second=self.first,
             order=self.order,
             bond_type=self.bond_type,
+            components=self.components,
         )
