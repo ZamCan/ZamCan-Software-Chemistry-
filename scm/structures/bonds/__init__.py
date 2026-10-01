@@ -6,6 +6,8 @@ from .energetics import BondEnergyPoint, BondStabilityAssessment, assess_energy_
 from .valence import ValenceEvidence, ValenceProfile, get_valence_profile, valence_electron_count, explain_bond_possibility
 from .lewis import LewisBookkeeping, LewisAtomBookkeeping, OctetStatus, build_lewis_bookkeeping
 from .vsepr import ElectronGeometry, VSEPRResult, analyze_vsepr
+from .resonance import ResonanceStructure, ResonanceSet
+from .network import BondNetworkSummary, summarize_bond_network
 
 __all__ = [
     "Bond",
@@ -33,4 +35,8 @@ __all__ = [
     "ElectronGeometry",
     "VSEPRResult",
     "analyze_vsepr",
+    "ResonanceStructure",
+    "ResonanceSet",
+    "BondNetworkSummary",
+    "summarize_bond_network",
 ]
