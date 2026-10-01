@@ -96,12 +96,14 @@ class ChemicalSpecies:
         return str(self.composition)
 
     @property
-    def identity_key(self) -> tuple:
-        return (
-            self.composition.element_counts.__repr__(),
-            self.charge_number,
-            self.radical,
-        )
+    def identity_key(self):
+        """Return the deterministic SCM identity key.
+
+        Names are annotations, not identity. Isotope-aware Atom/Ion instances
+        contribute their explicit mass number when available.
+        """
+        from scm.chemistry.identity_key import identity_key
+        return identity_key(self)
 
     def contains_element(self, element: str) -> bool:
         return self.composition.contains(element)
