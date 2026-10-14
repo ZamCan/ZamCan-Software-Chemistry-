@@ -44,6 +44,9 @@ def _parse(formula: str) -> list[tuple[str,int]]:
 
 def assign_oxidation_states(formula: str, charge: int = 0) -> OxidationStateResult:
     parts = _parse(formula)
+    if len({symbol for symbol, _ in parts}) == 1 and charge == 0:
+        symbol = parts[0][0]
+        return OxidationStateResult(formula, (OxidationAssignment(symbol, 0, OxidationStatus.RESOLVED, 'Element in its uncombined form has oxidation state zero'),), OxidationStatus.RESOLVED, charge, 'Elemental form rule.')
     fixed: dict[str,int] = {}
     for s,_ in parts:
         if s in _COMMON and s not in fixed:
