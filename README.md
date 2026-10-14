@@ -374,7 +374,7 @@ The repository contains executable foundations beyond the original project scaff
 - coordination-chemistry ligand/coordination-number records
 - canonical chemical identity keys
 - atom/ion electron-state consistency validation
-- multilingual English/Swahili/Arabic chemistry vocabulary
+- English-only LCM intent vocabulary and chemistry terminology
 - research experiments and dataset provenance records
 - structured Nano/Molecular/Laboratory/Process/Sensor visualization scenes
 - laboratory apparatus/measurement records

@@ -1,4 +1,5 @@
 from scm.structures.bonds import (
+    Bond,
     BondComponent,
     BondOrder,
     BondType,
@@ -120,7 +121,8 @@ def test_vsepr_maps_common_domain_patterns():
     assert analyze_vsepr(2, 0).molecular_geometry == "linear"
     assert analyze_vsepr(3, 0).molecular_geometry == "trigonal_planar"
     assert analyze_vsepr(4, 0).molecular_geometry == "tetrahedral"
-    assert analyze_vsepr(4, 1).molecular_geometry == "trigonal_pyramidal"
+    assert analyze_vsepr(3, 1).molecular_geometry == "trigonal_pyramidal"
+    assert analyze_vsepr(4, 1).molecular_geometry == "seesaw"
     assert analyze_vsepr(4, 2).molecular_geometry == "bent"
 
 
