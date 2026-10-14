@@ -362,7 +362,7 @@ This project is experimental scientific software and research. Model predictions
 
 ## Current Kernel Expansion
 
-The repository now contains executable foundations beyond the original project scaffold, including:
+The repository contains executable foundations beyond the original project scaffold. LCM and documentation are English-only. Current capabilities include:
 
 - conservative oxidation-state assignment with explicit ambiguity
 - stoichiometric limiting-reagent calculations
