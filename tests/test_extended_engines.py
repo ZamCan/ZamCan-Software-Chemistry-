@@ -33,3 +33,8 @@ def test_scientific_input_validation():
 def test_balanced_equation_is_not_proof_of_reaction():
     result=assess_reaction(atom_balance=True,charge_balance=True)
     assert result.status is PlausibilityStatus.INSUFFICIENT_DATA
+
+def test_elemental_oxygen_oxidation_state_is_zero():
+    result=assign_oxidation_states('O2')
+    assert result.status.value=='resolved'
+    assert result.assignments[0].state==0
