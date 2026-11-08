@@ -1,4 +1,5 @@
 """Python SDK around the local scientific engines and notebook."""
+from scm.chemistry.analytical.qualitative import identify_salt, observation_catalogue
 from scm.notebook import LabNotebook
 from scm.robotics import simulate_transfers
 from zcm.calculations import (
@@ -20,5 +21,7 @@ class ZCMClient:
     dilute = staticmethod(calculate_dilution)
     titrate = staticmethod(titrate)
     infer_concentration = staticmethod(infer_concentration)
+    identify_salt = staticmethod(identify_salt)
+    ion_tests = staticmethod(observation_catalogue)
     open_notebook = staticmethod(LabNotebook)
     simulate_transfers = staticmethod(simulate_transfers)

@@ -9,6 +9,8 @@ import sqlite3
 from statistics import mean, stdev
 from uuid import uuid4
 
+from scm.chemistry.analytical.base import Observation
+from scm.chemistry.analytical.qualitative import identify_salt, validate_observation
 from scm.lab_records import Measurement
 from scm.research import Dataset, Experiment
 
@@ -101,6 +103,34 @@ class LabNotebook:
     def record_dataset(self, experiment_id: str, dataset: Dataset) -> int:
         _require_text(dataset.dataset_id, dataset.version, dataset.title, dataset.source)
         return self._append(experiment_id, "dataset", asdict(dataset))
+
+    def record_ion_observation(
+        self, experiment_id: str, sample: str, observation: Observation
+    ) -> int:
+        _require_text(sample)
+        validate_observation(observation)
+        return self._append(
+            experiment_id, "ion_observation", {"sample": sample.strip(), **asdict(observation)}
+        )
+
+    def analyze_salt(self, experiment_id: str, sample: str, *, save: bool = False) -> dict:
+        _require_text(sample)
+        sample = sample.strip()
+        rows = [
+            event for event in self.export(experiment_id)["events"]
+            if event["kind"] == "ion_observation" and event["payload"]["sample"] == sample
+        ]
+        observations = [
+            Observation(event["payload"]["test"], event["payload"]["observation"])
+            for event in rows
+        ]
+        result = identify_salt(observations)
+        for item, event in zip(result["observations"], rows, strict=True):
+            item["record_sequence"] = event["sequence"]
+        result["sample"] = sample
+        if save:
+            return {**result, "record_sequence": self._append(experiment_id, "salt_analysis", result)}
+        return result
 
     def record_calculation(self, experiment_id: str, result: dict) -> int:
         return self._append(experiment_id, "calculation", result)

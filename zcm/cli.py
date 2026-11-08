@@ -7,6 +7,8 @@ from pathlib import Path
 import sqlite3
 
 from scm.chemistry import assign_oxidation_states, gibbs_free_energy
+from scm.chemistry.analytical.base import Observation
+from scm.chemistry.analytical.qualitative import observation_catalogue
 from scm.core import Quantity
 from scm.lab_records import Measurement
 from scm.notebook import LabNotebook
@@ -24,7 +26,8 @@ def _lab_commands(parser):
     create.add_argument("title")
     create.add_argument("objective")
     commands.add_parser("list")
-    for action in ("export", "measure", "note", "dataset", "summarize"):
+    commands.add_parser("ion-tests", help="List accepted test and observation identifiers")
+    for action in ("export", "measure", "note", "dataset", "summarize", "observe-ion", "identify-salt"):
         commands.add_parser(action).add_argument("experiment_id")
 
     measure = commands.choices["measure"]
@@ -45,9 +48,17 @@ def _lab_commands(parser):
     summary.add_argument("quantity")
     summary.add_argument("unit")
     summary.add_argument("--save", action="store_true")
+    observe = commands.choices["observe-ion"]
+    for name in ("sample", "test", "observation"):
+        observe.add_argument(name)
+    identify = commands.choices["identify-salt"]
+    identify.add_argument("sample")
+    identify.add_argument("--save", action="store_true")
 
 
 def _lab(args):
+    if args.action == "ion-tests":
+        return observation_catalogue()
     notebook = LabNotebook(args.db)
     if args.action == "create":
         return asdict(notebook.create(args.title, args.objective))
@@ -61,7 +72,13 @@ def _lab(args):
         if args.save:
             result = {**result, "record_sequence": notebook.record_calculation(experiment, result)}
         return result
-    if args.action == "measure":
+    if args.action == "identify-salt":
+        return notebook.analyze_salt(experiment, args.sample, save=args.save)
+    if args.action == "observe-ion":
+        sequence = notebook.record_ion_observation(
+            experiment, args.sample, Observation(args.test, args.observation)
+        )
+    elif args.action == "measure":
         measurement = Measurement(
             args.quantity, args.value, args.unit, args.instrument, args.uncertainty
         )

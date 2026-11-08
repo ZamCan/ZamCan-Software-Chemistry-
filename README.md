@@ -474,3 +474,24 @@ zcm infer-concentration '{"titrant_mol_l":0.100,"titrant_ml":25.00,"analyte_ml":
 The second request asks for an explicit mole ratio or the equation and
 reactant formulas. Add `--experiment` to save a completed trace to a lab
 record. Python callers can use `ZCMClient().infer_concentration(evidence)`.
+
+### Interpret an unknown single salt
+
+Use `zcm lab ion-tests` to see supported test and outcome identifiers.
+Record observations already made under the referenced test conditions, and
+analyze one sample at a time within a practical:
+
+```sh
+zcm --db practical.sqlite3 lab observe-ion "$experiment" sample-a flame yellow
+zcm --db practical.sqlite3 lab observe-ion "$experiment" sample-a silver_nitrate_nitric_acid white_precipitate
+zcm --db practical.sqlite3 lab identify-salt "$experiment" sample-a --save
+```
+
+The result lists candidate ions and points to the supporting notebook
+entries. A unique supported pair yields a charge-balanced formula
+hypothesis. Ambiguous, conflicting, and insufficient evidence remain
+separate outcomes. The catalogue covers a limited set of positive
+signatures in the referenced educational syllabus. Mixtures, unlisted ions,
+purity, and hydration state are outside this model. Recorded tests with no
+observable change do not establish that an ion is absent. Python callers
+can pass `Observation` objects to `ZCMClient().identify_salt`.
