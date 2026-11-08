@@ -88,6 +88,8 @@ class MolarMassCalculator:
                     count=count,
                     atomic_mass=atomic_mass,
                     contribution=contribution,
+                    evidence=properties[0].evidence,
+                    atomic_weight_uncertainty=properties[0].uncertainty,
                 )
             )
 

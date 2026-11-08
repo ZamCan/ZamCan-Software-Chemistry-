@@ -9,7 +9,14 @@ from zcm.sdk import ZCMClient
 
 def test_calculator_uses_language_router_and_exact_reaction_amounts():
     client = ZCMClient()
-    assert client.calculate("uzito wa moli H2O")["result"]["minimum"] == 18.01468
+    assert client.calculate("uzito wa moli H2O")["result"]["minimum"] == 18.01471
+    mass = client.calculate("molar mass Ca(OH)2")
+    assert mass["result"]["minimum"] == pytest.approx(74.09174)
+    calcium = next(term for term in mass["contributions"] if term["element"] == "Ca")
+    assert calcium["atomic_weight_uncertainty"]["absolute"] == 0.004
+    assert calcium["references"][0]["source"] == "CIAAW, Standard Atomic Weights 2024"
+    with pytest.raises(ValueError, match="No standard atomic weight"):
+        client.calculate("molar mass Tc")
     assert client.calculate("balance equation H2 + O2 -> H2O")["reactant_coefficients"] == [2, 1]
     assert client.calculate("balance Ca(OH)2 + HCl -> CaCl2 + H2O")["product_coefficients"] == [1, 2]
     for equation in ("H2 + -> H2", "Xx2 -> Xx", "H2 + O2 -> H2O + H2O2"):

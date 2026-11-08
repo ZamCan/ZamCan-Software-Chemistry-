@@ -30,12 +30,12 @@ def test_hydrogen_water_molar_mass_preserves_atomic_weight_ranges():
     maximum = result.molar_mass.maximum.to("g/mol").value
 
     assert minimum == pytest.approx(
-        2 * 1.00784 + 15.999,
+        2 * 1.00784 + 15.99903,
         rel=1e-12,
     )
 
     assert maximum == pytest.approx(
-        2 * 1.00811 + 16.000,
+        2 * 1.00811 + 15.99977,
         rel=1e-12,
     )
 
@@ -53,12 +53,12 @@ def test_single_element_oxygen_preserves_standard_atomic_weight_range():
     maximum = result.molar_mass.maximum.to("g/mol").value
 
     assert minimum == pytest.approx(
-        15.999,
+        15.99903,
         rel=1e-12,
     )
 
     assert maximum == pytest.approx(
-        16.000,
+        15.99977,
         rel=1e-12,
     )
 
@@ -76,12 +76,12 @@ def test_stoichiometric_count_scales_range_contribution():
     maximum = result.molar_mass.maximum.to("g/mol").value
 
     assert minimum == pytest.approx(
-        2 * 15.999,
+        2 * 15.99903,
         rel=1e-12,
     )
 
     assert maximum == pytest.approx(
-        2 * 16.000,
+        2 * 15.99977,
         rel=1e-12,
     )
 

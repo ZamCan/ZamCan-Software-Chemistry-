@@ -396,8 +396,11 @@ zcm stoichiometry 'H2 + O2 -> H2O' '{"H2":"0.30","O2":"0.20"}'
 zcm titrate 0.100 25.00 20.00 --ratio 1
 ```
 
-The calculator returns JSON. Molar mass includes an interval when the element
-data supplies one. Stoichiometry reports theoretical yields and limiting
+The calculator returns JSON. Molar mass uses the offline [CIAAW 2024 standard
+atomic weights](https://ciaaw.org/atomic-weights.htm) for 84 elements. It retains
+natural-composition intervals and reports tabulated uncertainty per element.
+Elements without a standard atomic weight produce an explicit error.
+Stoichiometry reports theoretical yields and limiting
 reactants using exact fractions in mol. The titration inputs are titrant
 concentration in mol/L and both volumes in mL. The ratio is analyte moles per
 titrant mole at equivalence. Formula input supports neutral formulas and

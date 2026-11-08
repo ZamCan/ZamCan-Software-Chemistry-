@@ -1,4 +1,5 @@
 """Structured, reproducible results for product-facing calculations."""
+from dataclasses import asdict
 from fractions import Fraction
 from math import isfinite
 
@@ -31,7 +32,18 @@ def calculate(query: str) -> dict:
             "unit": "g/mol",
             "result": _mass(result.molar_mass),
             "contributions": [
-                {"element": term.element, "count": term.count, **_mass(term.contribution)}
+                {
+                    "element": term.element,
+                    "count": term.count,
+                    **_mass(term.contribution),
+                    "atomic_weight_uncertainty": (
+                        asdict(term.atomic_weight_uncertainty) if term.atomic_weight_uncertainty else None
+                    ),
+                    "references": [
+                        {"source": evidence.source, "reference": evidence.reference}
+                        for evidence in term.evidence
+                    ],
+                }
                 for term in result.terms
             ],
         }

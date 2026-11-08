@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from scm.core import Quantity, QuantityRange
+from scm.core import Evidence, Quantity, QuantityRange, Uncertainty
 from scm.matter.species import ChemicalSpecies
 
 
@@ -19,6 +19,8 @@ class MolarMassTerm:
     count: int
     atomic_mass: Quantity | QuantityRange
     contribution: Quantity | QuantityRange
+    evidence: tuple[Evidence, ...] = ()
+    atomic_weight_uncertainty: Uncertainty | None = None
 
 
 @dataclass(frozen=True)
