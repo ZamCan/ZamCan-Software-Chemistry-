@@ -1,5 +1,6 @@
 """Machine-readable engineering coverage manifest.
-A domain is complete only when its kernel, interface, validation and evidence requirements are represented.
+Coverage flags track existing foundations. Release completion additionally requires
+verification of the declared domain scope.
 """
 from dataclasses import dataclass
 @dataclass(frozen=True)
@@ -9,8 +10,9 @@ class Coverage:
     validation:bool
     interface:bool
     evidence:bool
+    release_verified: bool = False
     @property
-    def complete(self): return self.kernel and self.validation and self.interface and self.evidence
+    def complete(self): return self.kernel and self.validation and self.interface and self.evidence and self.release_verified
 COVERAGE=(
  Coverage('matter',True,True,True,True), Coverage('identity',True,True,True,True),
  Coverage('bonding',True,True,True,True), Coverage('stoichiometry',True,True,True,True),

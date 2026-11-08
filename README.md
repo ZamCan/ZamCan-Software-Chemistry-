@@ -394,6 +394,7 @@ zcm calculate 'molar mass Ca(OH)2'
 zcm calculate 'balance equation H2 + O2 -> H2O'
 zcm stoichiometry 'H2 + O2 -> H2O' '{"H2":"0.30","O2":"0.20"}'
 zcm titrate 0.100 25.00 20.00 --ratio 1
+zcm titrate 0.100 25.00 20.00 --equation 'NaOH + H2SO4 -> Na2SO4 + H2O' --titrant NaOH --analyte H2SO4
 zcm molarity 25 500 --amount-unit mmol
 zcm mass-molarity NaCl 5.844 1 --volume-unit L
 zcm dilute 1 25 250
@@ -406,7 +407,9 @@ Elements without a standard atomic weight produce an explicit error.
 Stoichiometry reports theoretical yields and limiting
 reactants using exact fractions in mol. The titration inputs are titrant
 concentration in mol/L and both volumes in mL. The ratio is analyte moles per
-titrant mole at equivalence. Formula input supports neutral formulas and
+titrant mole at equivalence. An equation with two reactants can supply that
+ratio through the balanced coefficients. This calculates an equivalence
+result for the supplied reaction and measurements. Formula input supports neutral formulas and
 parenthesized groups. Ionic and hydrate notation are outside the CLI syntax.
 
 Molarity uses the **final solution volume**, defaulting to mL. Mass-based

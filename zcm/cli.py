@@ -92,7 +92,11 @@ def main(argv=None):
     titration = commands.add_parser("titrate", help="Calculate analyte amount and concentration")
     for name in ("titrant_mol_l", "titrant_ml", "analyte_ml"):
         titration.add_argument(name, type=float)
-    titration.add_argument("--ratio", type=float, default=1, help="Analyte moles per titrant mole")
+    ratio_source = titration.add_mutually_exclusive_group()
+    ratio_source.add_argument("--ratio", type=float, help="Analyte moles per titrant mole, default 1")
+    ratio_source.add_argument("--equation", help="Derive the ratio from the supplied reaction")
+    titration.add_argument("--titrant", help="Titrant formula in the reaction")
+    titration.add_argument("--analyte", help="Analyte formula in the reaction")
     stoich = commands.add_parser("stoichiometry", help="Calculate limiting reagents and theoretical yields")
     stoich.add_argument("equation")
     stoich.add_argument("amounts_mol", help="JSON object mapping each reactant formula to its initial mol amount")
@@ -132,7 +136,10 @@ def main(argv=None):
             if args.command == "calculate":
                 result = calculate(args.query)
             elif args.command == "titrate":
-                result = titrate(args.titrant_mol_l, args.titrant_ml, args.analyte_ml, args.ratio)
+                result = titrate(
+                    args.titrant_mol_l, args.titrant_ml, args.analyte_ml, args.ratio,
+                    equation=args.equation, titrant=args.titrant, analyte=args.analyte,
+                )
             elif args.command == "stoichiometry":
                 result = stoichiometry(args.equation, json.loads(args.amounts_mol, parse_float=str))
             elif args.command == "molarity":

@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 import math
 
+from scm.chemistry.concentration import equivalence_amount, molarity
+from scm.core import Quantity
+
 @dataclass(frozen=True)
 class EquilibriumResult:
     quotient: float
@@ -17,9 +20,20 @@ class TitrationResult:
     concentration: float
 
 def titration(titrant_molarity, titrant_volume_l, analyte_volume_l, ratio=1.0):
-    if analyte_volume_l<=0 or min(titrant_molarity,titrant_volume_l,ratio)<0: raise ValueError('invalid titration inputs')
-    m=titrant_molarity*titrant_volume_l*ratio
-    return TitrationResult(m,m/analyte_volume_l)
+    return titration_from_quantities(
+        Quantity(titrant_molarity, "mol/L"),
+        Quantity(titrant_volume_l, "L"),
+        Quantity(analyte_volume_l, "L"),
+        ratio,
+    )
+
+
+def titration_from_quantities(
+    titrant: Quantity, delivered: Quantity, sample: Quantity, ratio: float = 1
+) -> TitrationResult:
+    amount = equivalence_amount(titrant, delivered, ratio)
+    concentration = molarity(amount, sample)
+    return TitrationResult(amount.value, concentration.value)
 
 @dataclass(frozen=True)
 class Stream:

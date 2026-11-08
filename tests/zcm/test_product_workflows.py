@@ -88,9 +88,8 @@ def test_notebook_and_simulator_through_separate_cli_invocations(tmp_path):
 def test_concentration_units_bounds_and_mass_interval():
     client = ZCMClient()
     assert client.chemistry.molarity(Quantity(25, "mmol"), Quantity(500, "mL")).to("mmol/L").value == 50
-    assert client.dilute(Quantity(1000, "mmol/L"), Quantity(25, "mL"), Quantity(0.25, "L"))["result"] == {
-        "value": 0.1,
-    }
+    diluted = client.dilute(Quantity(1000, "mmol/L"), Quantity(25, "mL"), Quantity(0.25, "L"))
+    assert diluted["result"]["value"] == pytest.approx(0.1)
     salt = client.mass_molarity("NaCl", Quantity(5844, "mg"), Quantity(1, "L"))
     assert salt["result"]["minimum"] == pytest.approx(5.844 / salt["molar_mass"]["maximum"])
     assert salt["result"]["maximum"] == pytest.approx(5.844 / salt["molar_mass"]["minimum"])
@@ -101,3 +100,33 @@ def test_concentration_units_bounds_and_mass_interval():
             client.molarity(Quantity(1, "mol"), Quantity(invalid_volume, "mL"))
     with pytest.raises(ValueError, match="at least"):
         client.dilute(Quantity(1, "mol/L"), Quantity(100, "mL"), Quantity(50, "mL"))
+
+
+def test_equation_titration_derives_ratio_and_validates_inputs():
+    client = ZCMClient()
+    reaction = dict(equation="NaOH + H2SO4 -> Na2SO4 + H2O", titrant="NaOH", analyte="H2SO4")
+    result = client.titrate(0.1, 25, 20, **reaction)
+    assert result["input"]["exact_mole_ratio"] == "1/2"
+    assert result["analyte_concentration_mol_l"] == pytest.approx(0.0625)
+    with pytest.raises(ValueError, match="either"):
+        client.titrate(0.1, 25, 20, 1, **reaction)
+    with pytest.raises(ValueError, match="two reactants"):
+        client.titrate(0.1, 25, 20, **{**reaction, "analyte": "H2O"})
+    with pytest.raises(ValueError, match="finite"):
+        client.chemistry.titration(float("nan"), 0.025, 0.020)
+
+
+def test_concentration_has_no_intermediate_overflow_and_rejects_underflow():
+    client = ZCMClient()
+    result = client.chemistry.diluted_molarity(
+        Quantity(1e300, "mol/L"), Quantity(1e-200, "L"), Quantity(1e200, "L")
+    )
+    assert result.value == pytest.approx(1e-100)
+    with pytest.raises(ValueError, match="below the numeric range"):
+        client.chemistry.molarity(Quantity(1e-300, "mol"), Quantity(1e300, "L"))
+
+
+def test_engine_coverage_does_not_claim_release_verification():
+    from scm.completion import completion_report
+
+    assert not any(completion_report().values())

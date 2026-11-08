@@ -13,10 +13,10 @@ from zcm.chemistry_api import ChemistryAPI
 def _quantity_payload(quantity, unit):
     if isinstance(quantity, QuantityRange):
         return {
-            "minimum": quantity.minimum.to(unit).value,
-            "maximum": quantity.maximum.to(unit).value,
+            "minimum": _quantity_payload(quantity.minimum, unit)["value"],
+            "maximum": _quantity_payload(quantity.maximum, unit)["value"],
         }
-    return {"value": quantity.to(unit).value}
+    return {"value": quantity.value if quantity.unit == unit else quantity.to(unit).value}
 
 
 def calculate(query: str) -> dict:
@@ -58,8 +58,34 @@ def calculate(query: str) -> dict:
     }
 
 
-def titrate(titrant_mol_l: float, titrant_ml: float, analyte_ml: float, ratio: float = 1) -> dict:
-    """Calculate analyte amount at equivalence with an explicit mole ratio."""
+def titrate(
+    titrant_mol_l: float, titrant_ml: float, analyte_ml: float, ratio: float | None = None,
+    *, equation: str | None = None, titrant: str | None = None, analyte: str | None = None,
+) -> dict:
+    """Calculate analyte amount from an explicit or equation-derived ratio."""
+    reaction = {}
+    if equation is not None:
+        if ratio is not None:
+            raise ValueError("Supply either a mole ratio or a reaction equation.")
+        if not titrant or not analyte or titrant == analyte:
+            raise ValueError("Name distinct titrant and analyte reactants for the equation.")
+        balanced = calculate(f"balance {equation}")
+        reactants = balanced["input"]["reactants"]
+        if len(reactants) != 2 or set(reactants) != {titrant, analyte}:
+            raise ValueError("The titration equation must have the titrant and analyte as its two reactants.")
+        coefficients = dict(zip(reactants, balanced["reactant_coefficients"], strict=True))
+        exact_ratio = Fraction(coefficients[analyte], coefficients[titrant])
+        ratio = float(exact_ratio)
+        reaction = {
+            "equation": balanced["equation"],
+            "titrant": titrant,
+            "analyte": analyte,
+            "exact_mole_ratio": str(exact_ratio),
+        }
+    elif titrant is not None or analyte is not None:
+        raise ValueError("Titrant and analyte formulas require a reaction equation.")
+    if ratio is None:
+        ratio = 1
     inputs = {
         "titrant_mol_l": titrant_mol_l,
         "titrant_ml": titrant_ml,
@@ -68,13 +94,14 @@ def titrate(titrant_mol_l: float, titrant_ml: float, analyte_ml: float, ratio: f
     }
     if any(isinstance(value, bool) or not isfinite(value) or value <= 0 for value in inputs.values()):
         raise ValueError("Titration inputs must be finite and positive.")
-    result = ChemistryAPI.titration(titrant_mol_l, titrant_ml / 1000, analyte_ml / 1000, ratio)
-    if not all(isfinite(value) for value in (result.moles, result.concentration)):
-        raise ValueError("Titration result exceeds numeric range.")
+    result = ChemistryAPI.titration_from_quantities(
+        Quantity(titrant_mol_l, "mol/L"), Quantity(titrant_ml, "mL"),
+        Quantity(analyte_ml, "mL"), ratio,
+    )
     return {
         "method": "equivalence_point_stoichiometry",
         "status": "calculated",
-        "input": inputs,
+        "input": {**inputs, **reaction},
         "analyte_amount_mol": result.moles,
         "analyte_concentration_mol_l": result.concentration,
     }
