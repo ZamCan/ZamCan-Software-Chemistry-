@@ -5,17 +5,18 @@ from math import isfinite
 
 from lcm import interpret, parse
 from lcm.intent import IntentKind
-from scm.core import QuantityRange
+from scm.core import Quantity, QuantityRange
+from zcm.chemistry.molar_mass import molar_mass_workspace
 from zcm.chemistry_api import ChemistryAPI
 
 
-def _mass(quantity):
+def _quantity_payload(quantity, unit):
     if isinstance(quantity, QuantityRange):
         return {
-            "minimum": quantity.minimum.to("g/mol").value,
-            "maximum": quantity.maximum.to("g/mol").value,
+            "minimum": quantity.minimum.to(unit).value,
+            "maximum": quantity.maximum.to(unit).value,
         }
-    return {"value": quantity.to("g/mol").value}
+    return {"value": quantity.to(unit).value}
 
 
 def calculate(query: str) -> dict:
@@ -30,12 +31,12 @@ def calculate(query: str) -> dict:
             "status": "calculated",
             "input": {"formula": intent.target},
             "unit": "g/mol",
-            "result": _mass(result.molar_mass),
+            "result": _quantity_payload(result.molar_mass, "g/mol"),
             "contributions": [
                 {
                     "element": term.element,
                     "count": term.count,
-                    **_mass(term.contribution),
+                    **_quantity_payload(term.contribution, "g/mol"),
                     "atomic_weight_uncertainty": (
                         asdict(term.atomic_weight_uncertainty) if term.atomic_weight_uncertainty else None
                     ),
@@ -117,4 +118,44 @@ def stoichiometry(equation: str, amounts_mol: dict) -> dict:
         "consumed": {key: str(value) for key, value in result.consumed.items()},
         "produced": {key: str(value) for key, value in result.produced.items()},
         "remaining": {key: str(value) for key, value in result.excess_remaining.items()},
+    }
+
+
+def calculate_molarity(amount: Quantity, final_volume: Quantity) -> dict:
+    result = ChemistryAPI.molarity(amount, final_volume)
+    return _concentration_result(
+        "amount_per_solution_volume", result, amount=amount, final_volume=final_volume
+    )
+
+
+def calculate_mass_molarity(formula: str, mass: Quantity, final_volume: Quantity) -> dict:
+    molar_mass = molar_mass_workspace.calculate(formula).molar_mass
+    result = ChemistryAPI.molarity_from_mass(mass, molar_mass, final_volume)
+    return {
+        **_concentration_result(
+            "mass_via_molar_mass_per_solution_volume", result, mass=mass, final_volume=final_volume
+        ),
+        "formula": formula,
+        "molar_mass": {"unit": "g/mol", **_quantity_payload(molar_mass, "g/mol")},
+        "assumption": "The recorded mass is pure solute of the specified formula.",
+    }
+
+
+def calculate_dilution(stock: Quantity, aliquot: Quantity, final_volume: Quantity) -> dict:
+    result = ChemistryAPI.diluted_molarity(stock, aliquot, final_volume)
+    return _concentration_result(
+        "dilution_with_conserved_solute", result, stock=stock, aliquot=aliquot, final_volume=final_volume
+    )
+
+
+def _concentration_result(method: str, result: Quantity | QuantityRange, **inputs: Quantity) -> dict:
+    return {
+        "method": method,
+        "status": "calculated",
+        "input": {
+            name: {"value": quantity.value, "unit": quantity.unit}
+            for name, quantity in inputs.items()
+        },
+        "unit": "mol/L",
+        "result": _quantity_payload(result, "mol/L"),
     }

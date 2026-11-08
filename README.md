@@ -394,6 +394,9 @@ zcm calculate 'molar mass Ca(OH)2'
 zcm calculate 'balance equation H2 + O2 -> H2O'
 zcm stoichiometry 'H2 + O2 -> H2O' '{"H2":"0.30","O2":"0.20"}'
 zcm titrate 0.100 25.00 20.00 --ratio 1
+zcm molarity 25 500 --amount-unit mmol
+zcm mass-molarity NaCl 5.844 1 --volume-unit L
+zcm dilute 1 25 250
 ```
 
 The calculator returns JSON. Molar mass uses the offline [CIAAW 2024 standard
@@ -405,6 +408,12 @@ reactants using exact fractions in mol. The titration inputs are titrant
 concentration in mol/L and both volumes in mL. The ratio is analyte moles per
 titrant mole at equivalence. Formula input supports neutral formulas and
 parenthesized groups. Ionic and hydrate notation are outside the CLI syntax.
+
+Molarity uses the **final solution volume**, defaulting to mL. Mass-based
+molarity calculates moles from the formula and pure solute mass, and
+preserves the molar-mass interval when present. Dilution takes stock
+concentration, aliquot volume, and final solution volume in that order.
+All three commands accept `--experiment` to store the inputs and result.
 
 ### Record and analyze a practical
 

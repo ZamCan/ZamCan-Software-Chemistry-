@@ -7,11 +7,14 @@ from pathlib import Path
 import sqlite3
 
 from scm.chemistry import assign_oxidation_states, gibbs_free_energy
+from scm.core import Quantity
 from scm.lab_records import Measurement
 from scm.notebook import LabNotebook
 from scm.research import Dataset
 from scm.robotics import simulate_transfers
-from zcm.calculations import calculate, stoichiometry, titrate
+from zcm.calculations import (
+    calculate, calculate_dilution, calculate_mass_molarity, calculate_molarity, stoichiometry, titrate,
+)
 
 
 def _lab_commands(parser):
@@ -93,9 +96,25 @@ def main(argv=None):
     stoich = commands.add_parser("stoichiometry", help="Calculate limiting reagents and theoretical yields")
     stoich.add_argument("equation")
     stoich.add_argument("amounts_mol", help="JSON object mapping each reactant formula to its initial mol amount")
+    concentration = commands.add_parser("molarity", help="Calculate molarity from solute amount")
+    concentration.add_argument("amount", type=float)
+    concentration.add_argument("--amount-unit", default="mol", choices=("mol", "mmol"))
+    from_mass = commands.add_parser("mass-molarity", help="Calculate molarity from formula and mass")
+    from_mass.add_argument("formula")
+    from_mass.add_argument("mass", type=float)
+    from_mass.add_argument("--mass-unit", default="g", choices=("kg", "g", "mg"))
+    dilution = commands.add_parser("dilute", help="Calculate molarity after solvent addition")
+    dilution.add_argument("stock", type=float)
+    dilution.add_argument("--stock-unit", default="mol/L", choices=("mol/L", "mmol/L"))
+    dilution.add_argument("aliquot", type=float)
+    dilution.add_argument("--aliquot-unit", default="mL", choices=("mL", "L"))
+    for command in (concentration, from_mass, dilution):
+        command.add_argument("final_volume", type=float)
+        command.add_argument("--volume-unit", default="mL", choices=("mL", "L"))
+
     robot = commands.add_parser("simulate-transfers", help="Simulate a JSON liquid-transfer plan")
     robot.add_argument("plan", type=Path)
-    for command in (calc, titration, stoich, robot):
+    for command in (calc, titration, stoich, robot, concentration, from_mass, dilution):
         command.add_argument("--experiment", help="Save the result to this experiment ID")
     _lab_commands(commands.add_parser("lab", help="Record and analyze experiments"))
 
@@ -116,6 +135,20 @@ def main(argv=None):
                 result = titrate(args.titrant_mol_l, args.titrant_ml, args.analyte_ml, args.ratio)
             elif args.command == "stoichiometry":
                 result = stoichiometry(args.equation, json.loads(args.amounts_mol, parse_float=str))
+            elif args.command == "molarity":
+                result = calculate_molarity(
+                    Quantity(args.amount, args.amount_unit), Quantity(args.final_volume, args.volume_unit)
+                )
+            elif args.command == "mass-molarity":
+                result = calculate_mass_molarity(
+                    args.formula, Quantity(args.mass, args.mass_unit),
+                    Quantity(args.final_volume, args.volume_unit),
+                )
+            elif args.command == "dilute":
+                result = calculate_dilution(
+                    Quantity(args.stock, args.stock_unit), Quantity(args.aliquot, args.aliquot_unit),
+                    Quantity(args.final_volume, args.volume_unit),
+                )
             else:
                 plan = json.loads(args.plan.read_text(encoding="utf-8"))
                 if not isinstance(plan, dict) or set(plan) != {"vessels", "steps"}:
