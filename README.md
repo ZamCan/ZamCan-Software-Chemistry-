@@ -383,3 +383,63 @@ The repository contains executable foundations beyond the original project scaff
 - formulation and process-engineering data models
 
 These are computational foundations, not claims that every scientific domain is already experimentally validated. Missing scientific data remains explicit rather than fabricated.
+
+## Offline calculator, laboratory notebook, and robotics simulation
+
+Install with Python 3.11 or later. The runtime uses the standard library.
+
+```sh
+python -m pip install .
+zcm calculate 'molar mass Ca(OH)2'
+zcm calculate 'balance equation H2 + O2 -> H2O'
+zcm stoichiometry 'H2 + O2 -> H2O' '{"H2":"0.30","O2":"0.20"}'
+zcm titrate 0.100 25.00 20.00 --ratio 1
+```
+
+The calculator returns JSON. Molar mass includes an interval when the element
+data supplies one. Stoichiometry reports theoretical yields and limiting
+reactants using exact fractions in mol. The titration inputs are titrant
+concentration in mol/L and both volumes in mL. The ratio is analyte moles per
+titrant mole at equivalence. Formula input supports neutral formulas and
+parenthesized groups. Ionic and hydrate notation are outside the CLI syntax.
+
+### Record and analyze a practical
+
+```sh
+zcm --db practical.sqlite3 lab create 'Titration' 'Compare replicate titres'
+# Set experiment to the experiment_id returned by the create command.
+zcm --db practical.sqlite3 lab measure "$experiment" titre 24.95 mL --instrument B-01 --uncertainty 0.05
+zcm --db practical.sqlite3 lab measure "$experiment" titre 25.05 mL --instrument B-01 --uncertainty 0.05
+zcm --db practical.sqlite3 lab note "$experiment" 'Endpoint readings recorded.'
+zcm --db practical.sqlite3 lab dataset "$experiment" log-01 v1 'Bench notes' 'Lab notebook 01'
+zcm --db practical.sqlite3 lab summarize "$experiment" titre mL --save
+zcm --db practical.sqlite3 titrate 0.100 25.00 20.00 --experiment "$experiment"
+zcm --db practical.sqlite3 lab export "$experiment" > practical.json
+```
+
+The SQLite notebook preserves ordered measurements, notes, dataset provenance,
+calculations, and simulations. Replicate summaries select an exact quantity
+and unit and retain the measurement sequence IDs. The summary reports sample
+dispersion independently of each instrument's recorded uncertainty.
+
+### Simulate a robotics transfer plan
+
+Save this as `plan.json` and run `zcm simulate-transfers plan.json`. To save
+the trace in a practical, pass `--db practical.sqlite3` before
+`simulate-transfers` and `--experiment "$experiment"` after the filename.
+
+```json
+{
+  "vessels": {
+    "stock": {"capacity_ul": 1000, "volume_ul": 800},
+    "sample": {"capacity_ul": 500, "volume_ul": 0}
+  },
+  "steps": [{"source": "stock", "destination": "sample", "volume_ul": 250}]
+}
+```
+
+The simulator models volume accounting in integer microliters. Hardware
+actuation and device commissioning are separate from this workflow. The
+calculator, notebook, and simulator are also available through
+`zcm.sdk.ZCMClient`. LCM uses deterministic language patterns for its supported
+queries. It does not require a hosted model.

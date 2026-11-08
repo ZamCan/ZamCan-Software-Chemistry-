@@ -1,0 +1,74 @@
+import json
+import subprocess
+import sys
+
+import pytest
+
+from zcm.sdk import ZCMClient
+
+
+def test_calculator_uses_language_router_and_exact_reaction_amounts():
+    client = ZCMClient()
+    assert client.calculate("uzito wa moli H2O")["result"]["minimum"] == 18.01468
+    assert client.calculate("balance equation H2 + O2 -> H2O")["reactant_coefficients"] == [2, 1]
+    assert client.calculate("balance Ca(OH)2 + HCl -> CaCl2 + H2O")["product_coefficients"] == [1, 2]
+    for equation in ("H2 + -> H2", "Xx2 -> Xx", "H2 + O2 -> H2O + H2O2"):
+        with pytest.raises(ValueError):
+            client.calculate(f"balance {equation}")
+    result = client.stoichiometry("H2 + O2 -> H2O", {"H2": "0.3", "O2": "0.2"})
+    assert result["limiting_reactants"] == ["H2"]
+    assert result["produced"] == {"H2O": "3/10"}
+    assert result["remaining"]["O2"] == "1/20"
+    with pytest.raises(ValueError):
+        client.stoichiometry("H2 + O2 -> H2O", {"H2": "-0.3", "O2": "0.2"})
+    assert client.titrate(0.1, 25, 20, 2)["analyte_concentration_mol_l"] == pytest.approx(0.25)
+
+
+def test_notebook_and_simulator_through_separate_cli_invocations(tmp_path):
+    db = tmp_path / "notebook.db"
+
+    def run(*args, ok=True):
+        result = subprocess.run(
+            [sys.executable, "-m", "zcm.cli", "--db", str(db), *args],
+            capture_output=True,
+            text=True,
+        )
+        if ok:
+            assert result.returncode == 0, result.stderr
+            return json.loads(result.stdout)
+        assert result.returncode == 2
+        return result.stderr
+
+    experiment = run("lab", "create", "Titration", "Measure replicate titres")["experiment_id"]
+    assert run("lab", "list")[0]["id"] == experiment
+    run("lab", "measure", experiment, "titre", "24", "mL", "--instrument", "B-1", "--uncertainty", "0.05")
+    run("lab", "measure", experiment, "titre", "26", "mL")
+    assert "finite" in run("lab", "measure", experiment, "titre", "nan", "mL", ok=False)
+    run("lab", "measure", experiment, "titre", "0.025", "L")
+    run("lab", "note", experiment, "Endpoint observed")
+    run("lab", "dataset", experiment, "ds1", "v1", "Bench data", "lab-log-1")
+    summary = run("lab", "summarize", experiment, "titre", "mL", "--save")
+    assert summary["mean"] == 25
+    assert summary["sample_standard_deviation"] == pytest.approx(2 ** 0.5)
+    assert summary["measurement_sequences"] == [1, 2]
+    run("titrate", "0.1", "25", "20", "--experiment", experiment)
+
+    plan = {
+        "vessels": {
+            "stock": {"capacity_ul": 400, "volume_ul": 300},
+            "sample": {"capacity_ul": 100, "volume_ul": 0},
+        },
+        "steps": [{"source": "stock", "destination": "sample", "volume_ul": 100}],
+    }
+    path = tmp_path / "plan.json"
+    path.write_text(json.dumps(plan), encoding="utf-8")
+    simulation = run("simulate-transfers", str(path), "--experiment", experiment)
+    assert simulation["final_volumes_ul"] == {"stock": 200, "sample": 100}
+    plan["steps"].append(plan["steps"][0])
+    path.write_text(json.dumps(plan), encoding="utf-8")
+    assert "destination capacity" in run("simulate-transfers", str(path), "--experiment", experiment, ok=False)
+    exported = run("lab", "export", experiment)
+    assert [event["kind"] for event in exported["events"]] == [
+        "measurement", "measurement", "measurement", "observation", "dataset",
+        "calculation", "calculation", "simulation",
+    ]

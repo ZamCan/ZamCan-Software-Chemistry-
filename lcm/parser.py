@@ -12,8 +12,8 @@ _ELEMENT_RE = re.compile(
 )
 
 _BALANCE_RE = re.compile(
-    r"^(?:balance|balance equation|balanc(e|ing)|"
-    r"linganisha|linganisha mlinganyo)\s*[:\-]?\s*(.+)$",
+    r"^(?:balance equation|balanc(?:e|ing)|"
+    r"linganisha mlinganyo|linganisha)\s*[:\-]?\s*(.+)$",
     re.IGNORECASE,
 )
 
@@ -26,10 +26,10 @@ _REACTION_RE = re.compile(
 
 
 _ANALYSIS_PATTERNS = (
-    (re.compile(r"^(?:oxidation state|hali ya oksidishaji|حالة الأكسدة)\\s*[:\\-]?\\s*(.+)$", re.I), IntentKind.OXIDATION_STATE),
-    (re.compile(r"^(?:molar mass|uzito wa moli|الكتلة المولية)\\s*[:\\-]?\\s*(.+)$", re.I), IntentKind.MOLAR_MASS),
-    (re.compile(r"^(?:titration|titration ya|معايرة)\\s*[:\\-]?\\s*(.+)$", re.I), IntentKind.TITRATION),
-    (re.compile(r"^(?:equilibrium|usawaziko|اتزان)\\s*[:\\-]?\\s*(.+)$", re.I), IntentKind.EQUILIBRIUM),
+    (re.compile(r"^(?:oxidation state|hali ya oksidishaji|حالة الأكسدة)\s*[:\-]?\s*(.+)$", re.I), IntentKind.OXIDATION_STATE),
+    (re.compile(r"^(?:molar mass|uzito wa moli|الكتلة المولية)\s*[:\-]?\s*(.+)$", re.I), IntentKind.MOLAR_MASS),
+    (re.compile(r"^(?:titration|titration ya|معايرة)\s*[:\-]?\s*(.+)$", re.I), IntentKind.TITRATION),
+    (re.compile(r"^(?:equilibrium|usawaziko|اتزان)\s*[:\-]?\s*(.+)$", re.I), IntentKind.EQUILIBRIUM),
 )
 
 _FORMULA_SPLIT_RE = re.compile(r"\s*(?:->|→|=>|=)\s*")
@@ -58,7 +58,7 @@ def parse(text: str) -> ChemicalIntent:
 
     match = _BALANCE_RE.match(raw)
     if match:
-        equation = match.group(2).strip()
+        equation = match.group(1).strip()
         reactants, products = _parse_equation(equation)
         return ChemicalIntent(
             kind=IntentKind.BALANCE_EQUATION,
@@ -100,8 +100,8 @@ def _parse_equation(text: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
 
 
 def _parse_side(text: str) -> tuple[str, ...]:
-    items = tuple(item.strip() for item in text.split("+") if item.strip())
-    if not items:
+    items = tuple(item.strip() for item in text.split("+"))
+    if not all(items):
         raise ValueError("chemical equation side must contain a species")
     return items
 
