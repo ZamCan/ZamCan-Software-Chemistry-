@@ -15,6 +15,7 @@ from scm.robotics import simulate_transfers
 from zcm.calculations import (
     calculate, calculate_dilution, calculate_mass_molarity, calculate_molarity, stoichiometry, titrate,
 )
+from zcm.reasoning import infer_concentration
 
 
 def _lab_commands(parser):
@@ -116,9 +117,11 @@ def main(argv=None):
         command.add_argument("final_volume", type=float)
         command.add_argument("--volume-unit", default="mL", choices=("mL", "L"))
 
+    reasoning = commands.add_parser("infer-concentration", help="Select a calculation from analytical evidence")
+    reasoning.add_argument("evidence", help="JSON object containing the known measurements and facts")
     robot = commands.add_parser("simulate-transfers", help="Simulate a JSON liquid-transfer plan")
     robot.add_argument("plan", type=Path)
-    for command in (calc, titration, stoich, robot, concentration, from_mass, dilution):
+    for command in (calc, titration, stoich, robot, concentration, from_mass, dilution, reasoning):
         command.add_argument("--experiment", help="Save the result to this experiment ID")
     _lab_commands(commands.add_parser("lab", help="Record and analyze experiments"))
 
@@ -156,12 +159,16 @@ def main(argv=None):
                     Quantity(args.stock, args.stock_unit), Quantity(args.aliquot, args.aliquot_unit),
                     Quantity(args.final_volume, args.volume_unit),
                 )
+            elif args.command == "infer-concentration":
+                result = infer_concentration(json.loads(args.evidence))
             else:
                 plan = json.loads(args.plan.read_text(encoding="utf-8"))
                 if not isinstance(plan, dict) or set(plan) != {"vessels", "steps"}:
                     raise ValueError("Plan requires vessels and steps.")
                 result = simulate_transfers(plan["vessels"], plan["steps"])
-            if args.experiment:
+            if args.experiment and (
+                args.command != "infer-concentration" or result["status"] == "calculated"
+            ):
                 notebook = LabNotebook(args.db)
                 if args.command == "simulate-transfers":
                     sequence = notebook.record_simulation(args.experiment, result)

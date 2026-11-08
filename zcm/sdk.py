@@ -6,6 +6,7 @@ from zcm.calculations import (
 )
 
 from .chemistry_api import ChemistryAPI
+from .reasoning import infer_concentration
 
 
 class ZCMClient:
@@ -18,5 +19,6 @@ class ZCMClient:
     mass_molarity = staticmethod(calculate_mass_molarity)
     dilute = staticmethod(calculate_dilution)
     titrate = staticmethod(titrate)
+    infer_concentration = staticmethod(infer_concentration)
     open_notebook = staticmethod(LabNotebook)
     simulate_transfers = staticmethod(simulate_transfers)

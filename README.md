@@ -458,3 +458,19 @@ actuation and device commissioning are separate from this workflow. The
 calculator, notebook, and simulator are also available through
 `zcm.sdk.ZCMClient`. LCM uses deterministic language patterns for its supported
 queries. It does not require a hosted model.
+
+### Infer a concentration calculation from evidence
+
+The SCM analytical planner selects a method from the fields provided. It
+returns the candidate methods and missing evidence when the inputs are
+incomplete, and flags fields from incompatible methods. A completed trace
+includes the chosen method, the evidence used, and the calculation.
+
+```sh
+zcm infer-concentration '{"amount":{"value":25,"unit":"mmol"},"final_volume":{"value":500,"unit":"mL"}}'
+zcm infer-concentration '{"titrant_mol_l":0.100,"titrant_ml":25.00,"analyte_ml":20.00}'
+```
+
+The second request asks for an explicit mole ratio or the equation and
+reactant formulas. Add `--experiment` to save a completed trace to a lab
+record. Python callers can use `ZCMClient().infer_concentration(evidence)`.
