@@ -383,3 +383,128 @@ The repository contains executable foundations beyond the original project scaff
 - formulation and process-engineering data models
 
 These are computational foundations, not claims that every scientific domain is already experimentally validated. Missing scientific data remains explicit rather than fabricated.
+
+## Offline calculator, laboratory notebook, and robotics simulation
+
+Install with Python 3.11 or later. The runtime uses the standard library.
+
+```sh
+python -m pip install .
+zcm calculate 'molar mass Ca(OH)2'
+zcm calculate 'balance equation H2 + O2 -> H2O'
+zcm stoichiometry 'H2 + O2 -> H2O' '{"H2":"0.30","O2":"0.20"}'
+zcm titrate 0.100 25.00 20.00 --ratio 1
+zcm titrate 0.100 25.00 20.00 --equation 'NaOH + H2SO4 -> Na2SO4 + H2O' --titrant NaOH --analyte H2SO4
+zcm molarity 25 500 --amount-unit mmol
+zcm mass-molarity NaCl 5.844 1 --volume-unit L
+zcm dilute 1 25 250
+```
+
+The calculator returns JSON. Molar mass uses the offline [CIAAW 2024 standard
+atomic weights](https://ciaaw.org/atomic-weights.htm) for 84 elements. It retains
+natural-composition intervals and reports tabulated uncertainty per element.
+Elements without a standard atomic weight produce an explicit error.
+Stoichiometry reports theoretical yields and limiting
+reactants using exact fractions in mol. The titration inputs are titrant
+concentration in mol/L and both volumes in mL. The ratio is analyte moles per
+titrant mole at equivalence. An equation with two reactants can supply that
+ratio through the balanced coefficients. This calculates an equivalence
+result for the supplied reaction and measurements. Formula input supports neutral formulas and
+parenthesized groups. Ionic and hydrate notation are outside the CLI syntax.
+
+Molarity uses the **final solution volume**, defaulting to mL. Mass-based
+molarity calculates moles from the formula and pure solute mass, and
+preserves the molar-mass interval when present. Dilution takes stock
+concentration, aliquot volume, and final solution volume in that order.
+All three commands accept `--experiment` to store the inputs and result.
+
+### Record and analyze a practical
+
+```sh
+zcm --db practical.sqlite3 lab create 'Titration' 'Compare replicate titres'
+# Set experiment to the experiment_id returned by the create command.
+zcm --db practical.sqlite3 lab measure "$experiment" titre 24.95 mL --instrument B-01 --uncertainty 0.05
+zcm --db practical.sqlite3 lab measure "$experiment" titre 25.05 mL --instrument B-01 --uncertainty 0.05
+zcm --db practical.sqlite3 lab note "$experiment" 'Endpoint readings recorded.'
+zcm --db practical.sqlite3 lab dataset "$experiment" log-01 v1 'Bench notes' 'Lab notebook 01'
+zcm --db practical.sqlite3 lab summarize "$experiment" titre mL --save
+zcm --db practical.sqlite3 titrate 0.100 25.00 20.00 --experiment "$experiment"
+zcm --db practical.sqlite3 lab export "$experiment" > practical.json
+```
+
+The SQLite notebook preserves ordered measurements, notes, dataset provenance,
+calculations, and simulations. Replicate summaries select an exact quantity
+and unit and retain the measurement sequence IDs. The summary reports sample
+dispersion independently of each instrument's recorded uncertainty.
+
+### Simulate a robotics transfer plan
+
+Save this as `plan.json` and run `zcm simulate-transfers plan.json`. To save
+the trace in a practical, pass `--db practical.sqlite3` before
+`simulate-transfers` and `--experiment "$experiment"` after the filename.
+
+```json
+{
+  "vessels": {
+    "stock": {"capacity_ul": 1000, "volume_ul": 800},
+    "sample": {"capacity_ul": 500, "volume_ul": 0}
+  },
+  "steps": [{"source": "stock", "destination": "sample", "volume_ul": 250}]
+}
+```
+
+The simulator models volume accounting in integer microliters. Hardware
+actuation and device commissioning are separate from this workflow. The
+calculator, notebook, and simulator are also available through
+`zcm.sdk.ZCMClient`. LCM uses deterministic language patterns for its supported
+queries. It does not require a hosted model.
+
+### Infer a concentration calculation from evidence
+
+The SCM analytical planner selects a method from the fields provided. It
+returns the candidate methods and missing evidence when the inputs are
+incomplete, and flags fields from incompatible methods. A completed trace
+includes the chosen method, the evidence used, and the calculation.
+
+```sh
+zcm infer-concentration '{"amount":{"value":25,"unit":"mmol"},"final_volume":{"value":500,"unit":"mL"}}'
+zcm infer-concentration '{"titrant_mol_l":0.100,"titrant_ml":25.00,"analyte_ml":20.00}'
+```
+
+The second request asks for an explicit mole ratio or the equation and
+reactant formulas. Add `--experiment` to save a completed trace to a lab
+record. Python callers can use `ZCMClient().infer_concentration(evidence)`.
+
+### Interpret an unknown single salt
+
+Use `zcm lab ion-tests` to see supported test and outcome identifiers.
+Record observations already made under the referenced test conditions, and
+analyze one sample at a time within a practical:
+
+```sh
+zcm --db practical.sqlite3 lab observe-ion "$experiment" sample-a flame yellow
+zcm --db practical.sqlite3 lab observe-ion "$experiment" sample-a silver_nitrate_nitric_acid white_precipitate
+zcm --db practical.sqlite3 lab identify-salt "$experiment" sample-a --save
+```
+
+The result lists candidate ions and points to the supporting notebook
+entries. A unique supported pair yields a charge-balanced formula
+hypothesis. Ambiguous, conflicting, and insufficient evidence remain
+separate outcomes. The catalogue covers a limited set of positive
+signatures in the referenced educational syllabus. Mixtures, unlisted ions,
+purity, and hydration state are outside this model. Recorded tests with no
+observable change do not establish that an ion is absent. Python callers
+can pass `Observation` objects to `ZCMClient().identify_salt`.
+
+### Print a practical sheet
+
+```sh
+zcm --db practical.sqlite3 lab sheet "$experiment" > practical-sheet.html
+```
+
+Open the HTML file locally and print it or save it as a PDF using the
+browser's print dialog. The sheet includes recorded measurements,
+observations, data sources, conclusions, and analysis details. Saved
+replicate summaries and salt analyses link to their source records.
+The sheet works offline. Python callers can use
+`ZCMClient().render_practical_sheet(notebook.export(experiment_id))`.

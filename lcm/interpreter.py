@@ -5,6 +5,7 @@ from typing import Any
 
 from scm.chemistry.reactions import balance_equation, assess_reaction, ChemicalEquation
 from zcm.catalog.elements import element_catalog
+from zcm.chemistry.molar_mass import molar_mass_workspace
 
 from .intent import ChemicalIntent, IntentKind
 
@@ -31,6 +32,11 @@ def interpret(intent: ChemicalIntent) -> Interpretation:
             return Interpretation(intent, result=element_catalog.get(intent.target))
         except (KeyError, ValueError, TypeError) as exc:
             return Interpretation(intent, message=str(exc))
+
+    if intent.kind is IntentKind.MOLAR_MASS:
+        if intent.target is None:
+            return Interpretation(intent, message="Formula is missing.")
+        return Interpretation(intent, result=molar_mass_workspace.calculate(intent.target))
 
     if intent.kind is IntentKind.BALANCE_EQUATION:
         equation = ChemicalEquation.from_formulas(

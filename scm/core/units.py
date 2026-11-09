@@ -74,6 +74,8 @@ ANGLE = Dimension(angle=1)
 
 CHARGE = CURRENT * TIME
 DIMENSIONLESS = Dimension()
+VOLUME = LENGTH * LENGTH * LENGTH
+MOLAR_CONCENTRATION = AMOUNT / VOLUME
 
 
 UNIT_REGISTRY: Dict[str, UnitDefinition] = {
@@ -120,6 +122,9 @@ UNIT_REGISTRY: Dict[str, UnitDefinition] = {
 
     # Amount of substance
     "mol": UnitDefinition("mol", AMOUNT, 1.0),
+    "mmol": UnitDefinition("mmol", AMOUNT, 1e-3),
+    "mol/L": UnitDefinition("mol/L", MOLAR_CONCENTRATION, 1e3),
+    "mmol/L": UnitDefinition("mmol/L", MOLAR_CONCENTRATION, 1.0),
     "mol⁻¹": UnitDefinition("mol⁻¹", INVERSE_AMOUNT, 1.0),
     "1": UnitDefinition("1", DIMENSIONLESS, 1.0),
 
@@ -158,12 +163,12 @@ UNIT_REGISTRY: Dict[str, UnitDefinition] = {
     # Volume
     "L": UnitDefinition(
         "L",
-        LENGTH * LENGTH * LENGTH,
+        VOLUME,
         1e-3,
     ),
     "mL": UnitDefinition(
         "mL",
-        LENGTH * LENGTH * LENGTH,
+        VOLUME,
         1e-6,
     ),
 

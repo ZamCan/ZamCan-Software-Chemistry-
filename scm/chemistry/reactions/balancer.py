@@ -1,35 +1,21 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from fractions import Fraction
-import re
+
+from knowledge.elements.registry import get_element
+from scm.chemistry.formulas import parse_grouped_formula
 
 from .equation import BalancedEquation, ChemicalEquation
 
 
-_ELEMENT = re.compile(r"([A-Z][a-z]?)(\d*)")
-
-
 def parse_formula(formula: str) -> dict[str, int]:
-    formula = formula.strip()
-    if not formula:
-        raise ValueError("empty chemical formula")
-
-    counts: dict[str, int] = defaultdict(int)
-    position = 0
-
-    for match in _ELEMENT.finditer(formula):
-        if match.start() != position:
-            raise ValueError(f"unsupported formula syntax: {formula}")
-
-        element, number = match.groups()
-        counts[element] += int(number or "1")
-        position = match.end()
-
-    if position != len(formula):
-        raise ValueError(f"unsupported formula syntax: {formula}")
-
-    return dict(counts)
+    counts = parse_grouped_formula(formula).element_counts
+    for symbol in counts:
+        try:
+            get_element(symbol)
+        except KeyError as exc:
+            raise ValueError(f"Unknown element symbol: {symbol}") from exc
+    return counts
 
 
 def balance_equation(equation: ChemicalEquation) -> BalancedEquation:
@@ -38,11 +24,8 @@ def balance_equation(equation: ChemicalEquation) -> BalancedEquation:
         equation.products.species
     )
 
-    atoms = sorted({
-        element
-        for species_item in species
-        for element in parse_formula(species_item.formula)
-    })
+    compositions = [parse_formula(item.formula) for item in species]
+    atoms = sorted({element for composition in compositions for element in composition})
 
     # Ionic equations must conserve net charge as well as atoms.
     include_charge = any(
@@ -60,7 +43,7 @@ def balance_equation(equation: ChemicalEquation) -> BalancedEquation:
             if element == "__charge__":
                 count = species_item.charge_number
             else:
-                count = parse_formula(species_item.formula).get(element, 0)
+                count = compositions[index].get(element, 0)
             sign = 1 if index < len(equation.reactants.species) else -1
             row.append(Fraction(sign * count))
         matrix.append(row)
@@ -135,7 +118,10 @@ def _null_vector(matrix: list[list[Fraction]]) -> list[int]:
     if not free_columns:
         raise ValueError("equation has no non-trivial balancing solution")
 
-    free = free_columns[-1]
+    if len(free_columns) != 1:
+        raise ValueError("equation does not determine a unique coefficient ratio")
+
+    free = free_columns[0]
     solution = [Fraction(0) for _ in range(cols)]
     solution[free] = Fraction(1)
 

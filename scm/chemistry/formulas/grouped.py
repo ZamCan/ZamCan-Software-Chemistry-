@@ -31,6 +31,8 @@ def _sequence(tokens: list[str], pos: int, closing: str | None = None):
             raise ValueError("unexpected closing parenthesis")
         if t == "(":
             nested, pos = _sequence(tokens, pos + 1, ")")
+            if not nested:
+                raise ValueError("formula group must contain an element")
             mult, pos = _number(tokens, pos)
             for k, v in nested.items():
                 out[k] = out.get(k, 0) + v * mult

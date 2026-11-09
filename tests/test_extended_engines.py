@@ -26,7 +26,7 @@ def test_material_balance():
     assert r.balanced
 
 def test_scientific_input_validation():
-    assert not finite_number(float('nan'),'temperature')
+    assert finite_number(float('nan'), 'temperature')[0].code == 'not_finite_number'
     assert validate_unique(['H2','O2']).valid is True
     assert not validate_unique(['H2','H2']).valid
 
