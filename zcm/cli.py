@@ -17,6 +17,7 @@ from scm.robotics import simulate_transfers
 from zcm.calculations import (
     calculate, calculate_dilution, calculate_mass_molarity, calculate_molarity, stoichiometry, titrate,
 )
+from zcm.practical_sheet import render_practical_sheet
 from zcm.reasoning import infer_concentration
 
 
@@ -27,6 +28,7 @@ def _lab_commands(parser):
     create.add_argument("objective")
     commands.add_parser("list")
     commands.add_parser("ion-tests", help="List accepted test and observation identifiers")
+    commands.add_parser("sheet", help="Write a printable HTML practical sheet").add_argument("experiment_id")
     for action in ("export", "measure", "note", "dataset", "summarize", "observe-ion", "identify-salt"):
         commands.add_parser(action).add_argument("experiment_id")
 
@@ -65,7 +67,7 @@ def _lab(args):
     if args.action == "list":
         return notebook.list()
     experiment = args.experiment_id
-    if args.action == "export":
+    if args.action in ("export", "sheet"):
         return notebook.export(experiment)
     if args.action == "summarize":
         result = notebook.summarize(experiment, args.quantity, args.unit)
@@ -192,7 +194,10 @@ def main(argv=None):
                 else:
                     sequence = notebook.record_calculation(args.experiment, result)
                 result = {**result, "record_sequence": sequence}
-        print(json.dumps(result, ensure_ascii=False, allow_nan=False, indent=2))
+        if args.command == "lab" and args.action == "sheet":
+            print(render_practical_sheet(result), end="")
+        else:
+            print(json.dumps(result, ensure_ascii=False, allow_nan=False, indent=2))
     except (KeyError, OSError, ValueError, ArithmeticError, sqlite3.Error) as exc:
         parser.exit(2, f"zcm: {exc}\n")
 

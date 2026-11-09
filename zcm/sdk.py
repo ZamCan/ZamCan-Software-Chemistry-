@@ -7,6 +7,7 @@ from zcm.calculations import (
 )
 
 from .chemistry_api import ChemistryAPI
+from .practical_sheet import render_practical_sheet
 from .reasoning import infer_concentration
 
 
@@ -23,5 +24,6 @@ class ZCMClient:
     infer_concentration = staticmethod(infer_concentration)
     identify_salt = staticmethod(identify_salt)
     ion_tests = staticmethod(observation_catalogue)
+    render_practical_sheet = staticmethod(render_practical_sheet)
     open_notebook = staticmethod(LabNotebook)
     simulate_transfers = staticmethod(simulate_transfers)

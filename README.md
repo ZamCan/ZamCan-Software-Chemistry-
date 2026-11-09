@@ -495,3 +495,16 @@ signatures in the referenced educational syllabus. Mixtures, unlisted ions,
 purity, and hydration state are outside this model. Recorded tests with no
 observable change do not establish that an ion is absent. Python callers
 can pass `Observation` objects to `ZCMClient().identify_salt`.
+
+### Print a practical sheet
+
+```sh
+zcm --db practical.sqlite3 lab sheet "$experiment" > practical-sheet.html
+```
+
+Open the HTML file locally and print it or save it as a PDF using the
+browser's print dialog. The sheet includes recorded measurements,
+observations, data sources, conclusions, and analysis details. Saved
+replicate summaries and salt analyses link to their source records.
+The sheet works offline. Python callers can use
+`ZCMClient().render_practical_sheet(notebook.export(experiment_id))`.
