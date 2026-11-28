@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from scm.neurochemical_intelligence import reason
 from scm.core import Quantity
 from scm.chemistry.engine import ChemistryModule
 from scm.chemistry.engine import CalculationResult, ResultStatus
@@ -11,9 +12,13 @@ class ChemistryCalculator(ChemistryModule):
     def capabilities(self) -> frozenset[str]:
         return frozenset({
             "calculation",
+            "everyday_chemistry",
             "quantity_arithmetic",
             "unit_aware_calculation",
         })
+
+    def reason(self, operation: str, inputs: dict) -> dict:
+        return reason(operation, inputs)
 
     def add(self, left: Quantity, right: Quantity) -> Quantity:
         return left + right

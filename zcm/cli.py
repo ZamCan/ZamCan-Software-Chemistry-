@@ -4,10 +4,15 @@ import json
 from dataclasses import asdict
 from scm.chemistry import assign_oxidation_states, gibbs_free_energy
 from scm.scientific_validation import benchmark, conservation_residual
+from zcm.api import zcm
 from scm.evidence_reasoning import Evidence, compare_properties
 
 def scientific_operation(operation, payload):
     """Shared entry point for CLI and future application adapters."""
+    if operation == "everyday":
+        if not isinstance(payload, dict) or set(payload) != {"operation", "inputs"}:
+            raise ValueError("Expected an object with operation and inputs")
+        return zcm.execute("everyday_chemistry", "reason", **payload)
     if operation == "benchmark":
         return asdict(benchmark(**payload))
     if operation == "conservation":
@@ -24,7 +29,7 @@ def main(argv=None):
     sub=p.add_subparsers(dest="command",required=True)
     ox=sub.add_parser("oxidation"); ox.add_argument("formula"); ox.add_argument("--charge",type=int,default=0)
     dg=sub.add_parser("gibbs"); dg.add_argument("delta_h",type=float); dg.add_argument("delta_s",type=float); dg.add_argument("temperature",type=float)
-    for name in ("benchmark", "conservation", "compare-properties"):
+    for name in ("benchmark", "conservation", "compare-properties", "everyday"):
         cmd=sub.add_parser(name)
         cmd.add_argument("json_file", help="Path to JSON input")
     a=p.parse_args(argv)

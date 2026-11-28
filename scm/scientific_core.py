@@ -10,7 +10,7 @@ from functools import reduce
 from math import gcd, lcm, sqrt, isfinite
 import re
 
-_TOKEN = re.compile(r"([A-Z][a-z]?|\\(|\\)|[0-9]+)")
+_TOKEN = re.compile(r"[A-Z][a-z]?|[()]|[0-9]+")
 class ChemistryInputError(ValueError):
     """Invalid chemical input or insufficient scientific information."""
 
