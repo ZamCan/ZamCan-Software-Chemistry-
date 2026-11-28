@@ -2,12 +2,27 @@ from __future__ import annotations
 import argparse
 import json
 from dataclasses import asdict
+from scm import practical_science as practical
 from scm.chemistry import assign_oxidation_states, gibbs_free_energy
 from scm.scientific_validation import benchmark, conservation_residual
 from scm.evidence_reasoning import Evidence, compare_properties
 
 def scientific_operation(operation, payload):
     """Shared entry point for CLI and future application adapters."""
+    if operation == "formula":
+        return practical.calculate(payload["name"], **payload["quantities"])
+    if operation == "formula-catalog":
+        return practical.formula_catalog()
+    if operation == "constants":
+        return practical.constants_catalog()
+    if operation == "measurements":
+        return practical.measurement_summary(payload["values"])
+    if operation == "negligibility":
+        return practical.negligibility(**payload)
+    if operation == "qualitative-sheet":
+        return practical.qualitative_sheet(payload["sample_id"],
+            [practical.Observation(**row) for row in payload["observations"]],
+            payload.get("profile", "general"))
     if operation == "benchmark":
         return asdict(benchmark(**payload))
     if operation == "conservation":
@@ -24,7 +39,7 @@ def main(argv=None):
     sub=p.add_subparsers(dest="command",required=True)
     ox=sub.add_parser("oxidation"); ox.add_argument("formula"); ox.add_argument("--charge",type=int,default=0)
     dg=sub.add_parser("gibbs"); dg.add_argument("delta_h",type=float); dg.add_argument("delta_s",type=float); dg.add_argument("temperature",type=float)
-    for name in ("benchmark", "conservation", "compare-properties"):
+    for name in ("benchmark", "conservation", "compare-properties", "formula", "formula-catalog", "constants", "measurements", "negligibility", "qualitative-sheet"):
         cmd=sub.add_parser(name)
         cmd.add_argument("json_file", help="Path to JSON input")
     a=p.parse_args(argv)
