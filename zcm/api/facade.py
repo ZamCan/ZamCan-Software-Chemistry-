@@ -59,6 +59,9 @@ class ZCM:
                 f"multiple modules support capability: {capability}"
             )
 
+        if not isinstance(method, str) or not method.isidentifier() or method.startswith("_"):
+            raise AttributeError("Expected a public module method")
+
         target = getattr(modules[0], method, None)
 
         if target is None or not callable(target):
