@@ -152,3 +152,47 @@ def calculate(name, **quantities):
     value = finite(formula.operation(*(finite(quantities[k]) for k in formula.inputs)))
     return {"value": value, "unit": formula.output_unit, "equation": formula.equation,
             "assumptions": formula.assumptions, "status": "calculated"}
+
+# Additional SI relationships, kept separate from the immutable initial registry.
+FORMULAS = MappingProxyType({**FORMULAS,
+    "mass_fraction": Formula(("solute_mass_kg","solution_mass_kg"),"1","m_solute/m_solution","Mass fraction between zero and one",lambda m,M: fraction(m,M)),
+    "dilution_volume": Formula(("initial_concentration","initial_volume_m3","final_concentration"),"m^3","C1 V1/C2","Conserved solute; dilution only",lambda c,v,C: dilution(c,v,C)),
+    "percent_yield": Formula(("actual_mass_kg","theoretical_mass_kg"),"%","100 actual/theoretical","Apparent yield may exceed 100 percent; check purity",lambda a,t: 100*nonnegative(a)/positive(t)),
+    "gravitational_energy": Formula(("mass_kg","gravity_m_s2","height_change_m"),"J","mgh","Uniform gravitational field",lambda m,g,h: nonnegative(m)*positive(g)*h),
+    "acceleration": Formula(("initial_velocity_m_s","final_velocity_m_s","elapsed_s"),"m/s^2","(v-u)/t","Average acceleration",lambda u,v,t:(v-u)/positive(t)),
+    "displacement": Formula(("initial_velocity_m_s","acceleration_m_s2","elapsed_s"),"m","ut+at^2/2","Constant acceleration",lambda u,a,t:u*nonnegative(t)+a*t*t/2),
+    "centripetal_acceleration": Formula(("speed_m_s","radius_m"),"m/s^2","v^2/r","Circular motion",lambda v,r:nonnegative(v)**2/positive(r)),
+    "spring_energy": Formula(("spring_constant_n_m","extension_m"),"J","kx^2/2","Linear elastic spring",lambda k,x:positive(k)*x*x/2),
+    "electrical_energy": Formula(("power_w","elapsed_s"),"J","Pt","Constant power",lambda P,t:P*nonnegative(t)),
+    "resistivity_resistance": Formula(("resistivity_ohm_m","length_m","area_m2"),"ohm","rho L/A","Uniform conductor at specified temperature",lambda r,L,A:nonnegative(r)*positive(L)/positive(A)),
+    "capacitor_energy": Formula(("capacitance_f","voltage_v"),"J","CV^2/2","Linear capacitor",lambda C,V:positive(C)*V*V/2),
+    "refractive_index": Formula(("phase_speed_m_s",),"1","c/v","Phase refractive index",lambda v:CONSTANTS["light_speed"].value/positive(v)),
+    "frequency_period": Formula(("period_s",),"Hz","1/T","Periodic signal",lambda t:1/positive(t)),
+    "buoyant_force": Formula(("fluid_density_kg_m3","displaced_volume_m3","gravity_m_s2"),"N","rho V g","Uniform fluid density",lambda d,V,g:nonnegative(d)*nonnegative(V)*positive(g)),
+    "heat_power": Formula(("energy_j","elapsed_s"),"W","Q/t","Average heat transfer rate",lambda Q,t:Q/positive(t)),
+    "osmotic_pressure": Formula(("vant_hoff_factor","concentration_mol_m3","temperature_k"),"Pa","iCRT","Ideal dilute solution",lambda i,c,T:positive(i)*nonnegative(c)*R*positive(T)),
+    "first_order_remaining": Formula(("initial_concentration","rate_constant_s_inv","elapsed_s"),"same as initial concentration","C0 exp(-kt)","First-order irreversible reaction",lambda C,k,t:nonnegative(C)*exp(-nonnegative(k)*nonnegative(t))),
+})
+
+def fraction(m,M):
+    result=nonnegative(m)/positive(M)
+    if result>1:
+        raise ValueError("Solute mass exceeds solution mass")
+    return result
+
+def dilution(c,v,C):
+    c,C=positive(c),positive(C)
+    if C>c:
+        raise ValueError("Final concentration exceeds initial concentration")
+    return c*positive(v)/C
+
+def formula_catalog():
+    return {name: {"inputs": list(f.inputs), "unit": f.output_unit,
+                   "equation": f.equation, "assumptions": f.assumptions}
+            for name,f in FORMULAS.items()}
+
+def constants_catalog():
+    from dataclasses import asdict
+    return {**{k:asdict(v) for k,v in CONSTANTS.items()},
+            "gas_constant":asdict(Constant(R,"J/(mol K)",True,"Derived from exact SI constants")),
+            "faraday":asdict(Constant(CONSTANTS["avogadro"].value*CONSTANTS["elementary_charge"].value,"C/mol",True,"Derived from exact SI constants"))}
